@@ -1,17 +1,28 @@
 export type GlassType = "monolithic" | "tempered" | "laminated";
-export type ItemType = "guarda-corpo" | "pele-de-vidro" | "janela" | "porta";
-export type SupportType = "bi-apoiado" | "engastado-apoiado" | "bi-engastado" | "balanco";
+export type ItemCategory = "janela" | "porta" | "guarda-corpo" | "pele-de-vidro";
+
+export interface Typology {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  defaultSlsRatio: number; // e.g., 175 for L/175
+  maxDeflectionLimit: number; // mm, e.g., 20mm
+}
 
 export interface Profile {
   code: string;
+  series: string;
+  supplierId: string;
   weight: number; // kg/m
   ix: number; // cm^4
   wx: number; // cm^3
+  mr?: number; // kNm (Resistant Moment - calculated or provided)
 }
 
 export interface Supplier {
   id: string;
   name: string;
+  logo?: string;
 }
 
 export interface RegionWind {
@@ -19,28 +30,22 @@ export interface RegionWind {
   v0: number; // m/s
 }
 
-export type CalculationMode = "standard" | "railing";
 export type SupportCondition = "pinned" | "fixed" | "free";
 
 export interface CalcInputs {
-  item: ItemType;
-  calculationMode: CalculationMode;
-  typology: string;
-  profileSeries: string;
-  aluminumSupplier: string;
-  glassSupplier: string;
-  region: string;
-  height: number; // mm (Total height)
-  width: number; // mm (Influence width)
-  
-  // New Multi-Point Support Model
-  supports: SupportCondition[]; // Array of 2 or 4 supports
-  spanDistances: number[]; // Distances between supports (mm)
-  
-  supportOffset: number; // mm (Offset from start/end)
+  category: ItemCategory | "";
+  typologyId: string;
+  supplierId: string;
+  height: number; // mm
+  width: number; // mm
+  supportTop: SupportCondition;
+  supportBottom: SupportCondition;
+  supportLeft: SupportCondition;
+  supportRight: SupportCondition;
   windSpeed: number; // m/s (V0)
+  region: string;
   s1: number;
-  s2Category: number; // 1 to 5
+  s2Category: number;
   s2Class: "A" | "B" | "C";
   s3: number;
   cp: number;
@@ -50,25 +55,30 @@ export interface CalcInputs {
   allowableStress: number; // MPa
 }
 
+export interface Solution {
+  id: string;
+  profile: Profile;
+  glassThickness: number;
+  glassType: GlassType;
+  ixReq: number;
+  wxReq: number;
+  deflection: number;
+  deflectionLimit: number;
+  momentSoliciting: number;
+  momentResistant: number;
+  usageIndex: number; // %
+  safetyMargin: number; // %
+  eluPassed: boolean;
+  elsPassed: boolean;
+  isApproved: boolean;
+  rank: "economica" | "ideal" | "performance" | "reprovada";
+}
+
 export interface CalcResults {
-  vk: number; // m/s
-  q: number; // kN/m^2 (Dynamic pressure)
-  windPressure: number; // kN/m^2 (Design pressure)
-  totalLoad: number; // kN/m
-  maxMoment: number; // kNm
-  maxDeflection: number; // mm
-  requiredIx: number; // cm^4
-  requiredWx: number; // cm^3
-  glassStress: number; // MPa
-  glassDeflection: number; // mm
-  glassAlpha: number; // NBR 7199 alpha
-  momentCoefficient: number; // e.g., 1/8 = 0.125
-  deflectionCoefficient: number; // e.g., 5/384
-  selectedProfile: Profile | null;
-  slsPassed: boolean;
-  ulsPassed: boolean;
-  glassPassed: boolean;
+  vk: number;
+  q: number;
+  windPressure: number;
+  solutions: Solution[];
+  bestSolution: Solution | null;
   performanceClass: string;
-  glassSpecification: string;
-  profileSpecification: string;
 }

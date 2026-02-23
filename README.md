@@ -1,20 +1,43 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# EsquadriasCalc Pro 🚀
 
-# Run and deploy your AI Studio app
+Sistema profissional de alto desempenho para dimensionamento executivo de esquadrias e vidros, em total conformidade com as normas brasileiras:
+- **NBR 6123:2023** (Cargas de Vento)
+- **NBR 7199:2025** (Vidros na Construção Civil)
+- **NBR 10821** (Esquadrias Externas)
 
-This contains everything you need to run your app locally.
+## 🛠️ Tecnologias
+- **Frontend:** React 19, TypeScript, Tailwind CSS, Motion
+- **Backend:** Node.js, Express, SQLite (Better-SQLite3)
+- **Segurança:** JWT, Bcrypt, Helmet
+- **Relatórios:** jsPDF, AutoTable
+- **IA:** Google Gemini API (Extração de dados técnicos)
 
-View your app in AI Studio: https://ai.studio/apps/7a34f615-ce3b-4b3b-af10-566caadc60de
+## 🏗️ Arquitetura
+O projeto segue os princípios da **Clean Architecture** e **SOLID**:
+- `src/server/domain`: Entidades e regras de negócio puras.
+- `src/server/application`: Casos de uso e serviços.
+- `src/server/infrastructure`: Implementações técnicas (DB, Auth, AI).
+- `src/server/interfaces`: Controladores, rotas e middlewares.
 
-## Run Locally
+## 🚀 Como Iniciar
 
-**Prerequisites:**  Node.js
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
 
+2. Configure o arquivo `.env` (use `.env.example` como base).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+## 🔒 Segurança
+- Autenticação via JWT com Refresh Tokens.
+- Senhas criptografadas com Bcrypt (12 rounds).
+- Proteção contra ataques comuns via Helmet e CORS.
+- Variáveis de ambiente protegidas.
+
+## 📄 Licença
+Uso restrito e profissional. Consulte os termos de uso.
