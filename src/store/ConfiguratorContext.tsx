@@ -6,25 +6,72 @@ type Action =
   | { type: "SET_STEP"; payload: number }
   | { type: "SET_CATEGORY"; payload: ItemCategory }
   | { type: "SET_TYPOLOGY"; payload: string }
-  | { type: "SET_SUPPLIER"; payload: string }
-  | { type: "SET_GEOMETRY"; payload: { height: number; width: number; supportTop: SupportCondition; supportBottom: SupportCondition; supportLeft: SupportCondition; supportRight: SupportCondition } }
-  | { type: "SET_WIND"; payload: { region: string; windSpeed: number; s1: number; s2Category: number; s2Class: "A" | "B" | "C"; s3: number; cp: number } }
-  | { type: "SET_MATERIALS"; payload: { glassType: "monolithic" | "tempered" | "laminated"; glassThickness: number } }
+  | { type: "SET_SYSTEM_SUPPLIER"; payload: string }
+  | { type: "SET_ALUMINUM_SUPPLIER"; payload: string }
+  | { type: "SET_GLASS_SUPPLIER"; payload: string }
+  | { type: "SET_PROFILE"; payload: string }
+  | { type: "SET_GLASS"; payload: string }
+  | {
+      type: "SET_GEOMETRY";
+      payload: {
+        height: number | "";
+        width: number | "";
+        length: number | "";
+        intermediateSupports: number | "";
+        spans: number[];
+        supportTop: SupportCondition;
+        supportBottom: SupportCondition;
+        supportLeft: SupportCondition;
+        supportRight: SupportCondition;
+        buildingHeight: number | "";
+      };
+    }
+  | {
+      type: "SET_WIND";
+      payload: {
+        region: string;
+        windSpeed: number | "";
+        windTunnelPressure: number | "";
+        s1: number;
+        s2Category: number;
+        s2Class: "A" | "B" | "C";
+        s3: number;
+        cp: number;
+      };
+    }
+  | {
+      type: "SET_MATERIALS";
+      payload: {
+        glassType: "monolithic" | "tempered" | "laminated";
+        glassThickness: number | "";
+      };
+    }
+  | { type: "TOGGLE_AUTO_OPTIMIZE" }
+  | { type: "TOGGLE_COMPARE_SUPPLIERS" }
   | { type: "RESET" };
 
 const initialState: ConfigState = {
   step: 1,
   category: "",
   typologyId: "",
-  supplierId: SUPPLIERS[0].id,
-  height: 2500,
-  width: 1000,
+  systemSupplierId: SUPPLIERS[0].id,
+  aluminumSupplierId: SUPPLIERS[0].id,
+  glassSupplierId: SUPPLIERS[0].id,
+  profileId: "",
+  glassId: "",
+  height: "",
+  width: "",
+  length: "",
+  intermediateSupports: "",
+  spans: [],
   supportTop: "pinned",
   supportBottom: "pinned",
   supportLeft: "pinned",
   supportRight: "pinned",
-  region: BRAZIL_REGIONS[1].name,
-  windSpeed: BRAZIL_REGIONS[1].v0,
+  buildingHeight: "",
+  windTunnelPressure: "",
+  region: "",
+  windSpeed: "",
   s1: 1.0,
   s2Category: 4,
   s2Class: "B",
@@ -33,7 +80,9 @@ const initialState: ConfigState = {
   modulusOfElasticity: 70,
   allowableStress: 80,
   glassType: "laminated",
-  glassThickness: 10,
+  glassThickness: "",
+  autoOptimize: false,
+  compareSuppliers: false,
 };
 
 const reducer = (state: ConfigState, action: Action): ConfigState => {
@@ -41,17 +90,29 @@ const reducer = (state: ConfigState, action: Action): ConfigState => {
     case "SET_STEP":
       return { ...state, step: action.payload };
     case "SET_CATEGORY":
-      return { ...state, category: action.payload, typologyId: "", step: 2 };
+      return { ...state, category: action.payload, typologyId: "", profileId: "", glassId: "", step: 2 };
     case "SET_TYPOLOGY":
       return { ...state, typologyId: action.payload, step: 3 };
-    case "SET_SUPPLIER":
-      return { ...state, supplierId: action.payload, step: 4 };
+    case "SET_SYSTEM_SUPPLIER":
+      return { ...state, systemSupplierId: action.payload, profileId: "", glassId: "", step: 4 };
+    case "SET_ALUMINUM_SUPPLIER":
+      return { ...state, aluminumSupplierId: action.payload, profileId: "" };
+    case "SET_GLASS_SUPPLIER":
+      return { ...state, glassSupplierId: action.payload, glassId: "" };
+    case "SET_PROFILE":
+      return { ...state, profileId: action.payload };
+    case "SET_GLASS":
+      return { ...state, glassId: action.payload };
     case "SET_GEOMETRY":
       return { ...state, ...action.payload, step: 5 };
     case "SET_WIND":
       return { ...state, ...action.payload };
     case "SET_MATERIALS":
       return { ...state, ...action.payload };
+    case "TOGGLE_AUTO_OPTIMIZE":
+      return { ...state, autoOptimize: !state.autoOptimize, profileId: !state.autoOptimize ? "" : state.profileId };
+    case "TOGGLE_COMPARE_SUPPLIERS":
+      return { ...state, compareSuppliers: !state.compareSuppliers };
     case "RESET":
       return initialState;
     default:

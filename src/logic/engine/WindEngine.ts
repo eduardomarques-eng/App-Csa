@@ -1,7 +1,11 @@
 import { CalcInputs } from "../types";
 
 export class WindEngine {
-  static calculatePressure(inputs: CalcInputs): { vk: number; q: number; windPressure: number } {
+  static calculatePressure(inputs: CalcInputs): {
+    vk: number;
+    q: number;
+    windPressure: number;
+  } {
     const { windSpeed, s1, s2Category, s2Class, s3, cp } = inputs;
 
     // Fator S2 (NBR 6123)

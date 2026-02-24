@@ -20,13 +20,19 @@ export class CatalogAIService {
             properties: {
               code: { type: Type.STRING, description: "Código do perfil" },
               weight: { type: Type.NUMBER, description: "Peso linear em kg/m" },
-              ix: { type: Type.NUMBER, description: "Momento de inércia Ix em cm4" },
-              wx: { type: Type.NUMBER, description: "Módulo de resistência Wx em cm3" },
+              ix: {
+                type: Type.NUMBER,
+                description: "Momento de inércia Ix em cm4",
+              },
+              wx: {
+                type: Type.NUMBER,
+                description: "Módulo de resistência Wx em cm3",
+              },
             },
-            required: ["code", "weight", "ix", "wx"]
-          }
-        }
-      }
+            required: ["code", "weight", "ix", "wx"],
+          },
+        },
+      },
     });
 
     return JSON.parse(response.text);

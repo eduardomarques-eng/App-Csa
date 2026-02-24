@@ -1,19 +1,23 @@
-import { ConfigState, ElsResult, Profile, Typology } from "../core/types";
+import { ValidatedConfig, ElsResult, Profile, Typology } from "../core/types";
+import { generateVerificationResult } from "../services/verificationService";
 
 export const calculateEls = (
-  state: ConfigState,
+  state: ValidatedConfig,
   profile: Profile,
   totalLoad: number,
   effectiveSpan: number,
-  typology: Typology
+  typology: Typology,
+  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo",
 ): ElsResult => {
-  const { supportTop, supportBottom, modulusOfElasticity } = state;
+  const { modulusOfElasticity } = state;
 
   // Deflection Coefficient (Kf)
   let kf = 5 / 384; // Default simply supported (5qL⁴/384EI)
-  if (supportTop === "fixed" && supportBottom === "fixed") kf = 1 / 384; // Fixed-fixed (qL⁴/384EI)
-  else if (supportTop === "fixed" || supportBottom === "fixed") kf = 1 / 185; // Fixed-pinned (qL⁴/185EI)
-  else if (supportTop === "free" || supportBottom === "free") kf = 1 / 8; // Cantilever (qL⁴/8EI)
+  if (structuralSystem === "Engastado")
+    kf = 1 / 384; // Fixed-fixed (qL⁴/384EI)
+  else if (structuralSystem === "Consola")
+    kf = 1 / 8; // Cantilever (qL⁴/8EI)
+  else if (structuralSystem === "Contínuo") kf = 2 / 384; // Approximation for continuous beams
 
   // Deflection (f) in mm
   // f = (Kf * q * L⁴) / (E * I)
@@ -37,6 +41,7 @@ export const calculateEls = (
     deflection,
     deflectionLimit,
     ratio,
-    passed
+    passed,
+    verification: generateVerificationResult(deflection, deflectionLimit, "ELS"),
   };
 };

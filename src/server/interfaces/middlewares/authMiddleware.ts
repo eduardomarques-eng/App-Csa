@@ -11,9 +11,13 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -29,9 +33,15 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   }
 };
 
-export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const adminMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   if (req.user?.role !== "admin") {
-    return res.status(403).json({ message: "Forbidden: Admin access required" });
+    return res
+      .status(403)
+      .json({ message: "Forbidden: Admin access required" });
   }
   next();
 };

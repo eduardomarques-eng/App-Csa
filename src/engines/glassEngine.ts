@@ -1,10 +1,11 @@
-import { ConfigState, GlassOption, GlassResult } from "../core/types";
+import { ValidatedConfig, GlassOption, GlassResult } from "../core/types";
+import { generateVerificationResult } from "../services/verificationService";
 
 export const calculateGlass = (
-  state: ConfigState,
+  state: ValidatedConfig,
   glass: GlassOption,
   windPressure: number,
-  area: number
+  area: number,
 ): GlassResult => {
   const { glassType } = state;
 
@@ -22,6 +23,7 @@ export const calculateGlass = (
   return {
     stress,
     admissibleStress: glass.admissibleStress,
-    passed
+    passed,
+    verification: generateVerificationResult(stress, glass.admissibleStress, "VIDRO"),
   };
 };

@@ -10,22 +10,33 @@ export class MotorCalculoFachada {
     const { vk, q, windPressure } = WindEngine.calculatePressure(inputs);
 
     // 2. Find Typology
-    const typology = TYPOLOGIES.find(t => t.id === inputs.typologyId) || TYPOLOGIES[0];
+    const typology =
+      TYPOLOGIES.find((t) => t.id === inputs.typologyId) || TYPOLOGIES[0];
 
     // 3. Filter Catalog by Supplier
-    const filteredCatalog = catalog.filter(p => p.supplierId === inputs.supplierId);
+    const filteredCatalog = catalog.filter(
+      (p) => p.supplierId === inputs.supplierId,
+    );
 
     // 4. Generate Solutions
-    const rawSolutions: Solution[] = filteredCatalog.map(profile => 
-      StructuralEngine.calculateSolution(inputs, profile, windPressure, typology)
+    const rawSolutions: Solution[] = filteredCatalog.map((profile) =>
+      StructuralEngine.calculateSolution(
+        inputs,
+        profile,
+        windPressure,
+        typology,
+      ),
     );
 
     // 5. Rank Solutions
     const rankedSolutions = RankingEngine.rankSolutions(rawSolutions);
 
     // 6. Determine Performance Class
-    const bestSolution = rankedSolutions.find(s => s.isApproved) || null;
-    const performanceClass = this.determinePerformanceClass(windPressure, bestSolution);
+    const bestSolution = rankedSolutions.find((s) => s.isApproved) || null;
+    const performanceClass = this.determinePerformanceClass(
+      windPressure,
+      bestSolution,
+    );
 
     return {
       vk,
@@ -33,13 +44,16 @@ export class MotorCalculoFachada {
       windPressure,
       solutions: rankedSolutions,
       bestSolution,
-      performanceClass
+      performanceClass,
     };
   }
 
-  private static determinePerformanceClass(pressure: number, solution: Solution | null): string {
+  private static determinePerformanceClass(
+    pressure: number,
+    solution: Solution | null,
+  ): string {
     if (!solution || !solution.isApproved) return "Não Atende";
-    
+
     if (pressure > 2.5) return "Excepcional (S)";
     if (pressure > 1.5) return "Alta (A)";
     if (pressure > 1.0) return "Média (M)";

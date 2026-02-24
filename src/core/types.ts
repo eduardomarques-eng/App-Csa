@@ -1,4 +1,8 @@
-export type ItemCategory = "janela" | "porta" | "guarda-corpo" | "pele-de-vidro";
+export type ItemCategory =
+  | "janela"
+  | "porta"
+  | "guarda-corpo"
+  | "pele-de-vidro";
 export type GlassType = "monolithic" | "tempered" | "laminated";
 export type SupportCondition = "pinned" | "fixed" | "free";
 
@@ -22,6 +26,7 @@ export interface Profile {
 }
 
 export interface GlassOption {
+  id: string;
   thickness: number;
   type: GlassType;
   admissibleStress: number; // MPa
@@ -41,15 +46,24 @@ export interface ConfigState {
   step: number;
   category: ItemCategory | "";
   typologyId: string;
-  supplierId: string;
-  height: number;
-  width: number;
+  systemSupplierId: string;
+  aluminumSupplierId: string;
+  glassSupplierId: string;
+  profileId: string;
+  glassId: string;
+  height: number | "";
+  width: number | "";
+  length: number | ""; // Comprimento total (para guarda-corpo/pele de vidro)
+  intermediateSupports: number | "";
+  spans: number[]; // Distâncias entre apoios
   supportTop: SupportCondition;
   supportBottom: SupportCondition;
   supportLeft: SupportCondition;
   supportRight: SupportCondition;
+  buildingHeight: number | "";
+  windTunnelPressure: number | "";
   region: string;
-  windSpeed: number;
+  windSpeed: number | "";
   s1: number;
   s2Category: number;
   s2Class: "A" | "B" | "C";
@@ -58,7 +72,30 @@ export interface ConfigState {
   modulusOfElasticity: number;
   allowableStress: number;
   glassType: "monolithic" | "tempered" | "laminated";
+  glassThickness: number | "";
+  autoOptimize: boolean;
+  compareSuppliers: boolean;
+}
+
+export interface ValidatedConfig extends Omit<
+  ConfigState,
+  | "height"
+  | "width"
+  | "length"
+  | "intermediateSupports"
+  | "windSpeed"
+  | "glassThickness"
+  | "buildingHeight"
+  | "windTunnelPressure"
+> {
+  height: number;
+  width: number;
+  length: number;
+  intermediateSupports: number;
+  windSpeed: number;
   glassThickness: number;
+  buildingHeight: number;
+  windTunnelPressure: number;
 }
 
 export interface CalculationMetrics {
@@ -69,14 +106,30 @@ export interface CalculationMetrics {
   q: number;
   windPressure: number;
   totalLoad: number;
+  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo";
+  windMethod: "NBR 6123" | "Túnel de Vento";
+}
+
+export type StatusClassificacao = "APROVADO_CONFORTO" | "APROVADO_LIMITE" | "CRITICO" | "REPROVADO";
+
+export interface VerificationResult {
+  valorCalculado: number;
+  limiteNormativo: number;
+  percentualUtilizado: number;
+  margemSeguranca: number;
+  classificacao: StatusClassificacao;
+  recomendacaoTecnica: string;
 }
 
 export interface EluResult {
   momentSoliciting: number;
   momentResistant: number;
+  shearSoliciting: number; // Esforço cortante
+  shearResistant: number; // Esforço cortante resistente
   usageIndex: number;
   safetyMargin: number;
   passed: boolean;
+  verification: VerificationResult;
 }
 
 export interface ElsResult {
@@ -84,15 +137,22 @@ export interface ElsResult {
   deflectionLimit: number;
   ratio: number;
   passed: boolean;
+  verification: VerificationResult;
 }
 
 export interface GlassResult {
   stress: number;
   admissibleStress: number;
   passed: boolean;
+  verification: VerificationResult;
 }
 
-export type SolutionRank = "minima" | "economica" | "ideal" | "performance" | "reprovada";
+export type SolutionRank =
+  | "minima"
+  | "economica"
+  | "ideal"
+  | "performance"
+  | "reprovada";
 
 export interface Solution {
   id: string;
@@ -104,4 +164,8 @@ export interface Solution {
   isApproved: boolean;
   rank: SolutionRank;
   score: number; // For ranking
+  efficiencyIndex: number; // %
+  deflectionEfficiency: number; // %
+  globalEfficiency: number; // %
+  efficiencyClass: "Alta" | "Média" | "Superdimensionado" | "Reprovado";
 }

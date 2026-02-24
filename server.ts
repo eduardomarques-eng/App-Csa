@@ -25,7 +25,9 @@ async function startServer() {
   app.use("/api/auth", authRoutes);
 
   // Health Check
-  app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
+  app.get("/api/health", (req, res) =>
+    res.json({ status: "ok", timestamp: new Date() }),
+  );
 
   // 3. Vite Middleware / Static Files
   if (process.env.NODE_ENV !== "production") {
@@ -37,7 +39,9 @@ async function startServer() {
   } else {
     const distPath = path.resolve(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => res.sendFile(path.resolve(distPath, "index.html")));
+    app.get("*", (req, res) =>
+      res.sendFile(path.resolve(distPath, "index.html")),
+    );
   }
 
   // 4. Global Error Handler (Must be last)

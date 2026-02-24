@@ -1,5 +1,9 @@
 export type GlassType = "monolithic" | "tempered" | "laminated";
-export type ItemCategory = "janela" | "porta" | "guarda-corpo" | "pele-de-vidro";
+export type ItemCategory =
+  | "janela"
+  | "porta"
+  | "guarda-corpo"
+  | "pele-de-vidro";
 
 export interface Typology {
   id: string;

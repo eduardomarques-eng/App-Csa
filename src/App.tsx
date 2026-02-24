@@ -1,32 +1,79 @@
 import { useState, useEffect, useMemo, ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  Calculator, Wind, Maximize2, Layers, Download, CheckCircle2, AlertCircle,
-  LayoutGrid, ChevronRight, ArrowRight, Building2, Box, ChevronLeft, ShieldCheck
+import {
+  Calculator,
+  Wind,
+  Maximize2,
+  Layers,
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  LayoutGrid,
+  ChevronRight,
+  ArrowRight,
+  Building2,
+  Box,
+  ChevronLeft,
+  ShieldCheck,
+  FileText,
+  Settings,
 } from "lucide-react";
 
-import { ConfiguratorProvider, useConfigurator } from "./store/ConfiguratorContext";
+import {
+  ConfiguratorProvider,
+  useConfigurator,
+} from "./store/ConfiguratorContext";
 import { runStructuralEngine } from "./engines/structuralEngine";
-import { getCompatibleTypologies, getCompatibleProfiles, getCompatibleGlasses } from "./services/catalogService";
+import { runComparison, ComparisonResult } from "./services/comparisonService";
+import {
+  getCompatibleTypologies,
+  getCompatibleProfiles,
+  getCompatibleGlasses,
+} from "./services/catalogService";
 import { getRegionWindSpeed } from "./services/normativeService";
+import { generatePDF } from "./logic/pdfGenerator";
+import { isFormularioValido, getValidatedConfig } from "./logic/validation";
 import { BRAZIL_REGIONS, SUPPLIERS, TYPOLOGIES } from "./core/constants";
-import { Solution, CalculationMetrics, ItemCategory, SupportCondition } from "./core/types";
+import {
+  Solution,
+  CalculationMetrics,
+  ItemCategory,
+  SupportCondition,
+} from "./core/types";
+import { MapaIsopletas } from "./components/MapaIsopletas";
+import { SmartInputGroup } from "./components/SmartInputGroup";
+import { SmartSelectGroup } from "./components/SmartSelectGroup";
+import { DetailedDiagrams } from "./components/DetailedDiagrams";
 
 // --- UI Components ---
 
-function HeaderStat({ label, value }: { label: string, value: string }) {
+function HeaderStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[9px] font-bold uppercase opacity-40 tracking-widest">{label}</span>
-      <span className="text-xs font-black uppercase tracking-tighter">{value}</span>
+      <span className="text-[9px] font-bold uppercase opacity-40 tracking-widest">
+        {label}
+      </span>
+      <span className="text-xs font-black uppercase tracking-tighter">
+        {value}
+      </span>
     </div>
   );
 }
 
-function MetricBox({ label, value, unit }: { label: string, value: string, unit: string }) {
+function MetricBox({
+  label,
+  value,
+  unit,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+}) {
   return (
     <div className="border border-[#141414] bg-white p-6">
-      <p className="text-[9px] font-bold uppercase opacity-40 tracking-widest mb-2">{label}</p>
+      <p className="text-[9px] font-bold uppercase opacity-40 tracking-widest mb-2">
+        {label}
+      </p>
       <div className="flex items-baseline gap-1">
         <span className="text-3xl font-black tracking-tighter">{value}</span>
         <span className="text-xs font-bold opacity-40">{unit}</span>
@@ -35,10 +82,22 @@ function MetricBox({ label, value, unit }: { label: string, value: string, unit:
   );
 }
 
-function MiniStat({ label, value, unit, subtext }: { label: string, value: string, unit: string, subtext?: string }) {
+function MiniStat({
+  label,
+  value,
+  unit,
+  subtext,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  subtext?: string;
+}) {
   return (
     <div className="space-y-1">
-      <p className="text-[8px] font-bold uppercase opacity-40 tracking-widest">{label}</p>
+      <p className="text-[8px] font-bold uppercase opacity-40 tracking-widest">
+        {label}
+      </p>
       <div className="flex items-baseline gap-1">
         <span className="text-xs font-black">{value}</span>
         <span className="text-[8px] font-bold opacity-40">{unit}</span>
@@ -48,9 +107,18 @@ function MiniStat({ label, value, unit, subtext }: { label: string, value: strin
   );
 }
 
-function StepContainer({ title, icon, children }: { title: string, icon: ReactNode, children: ReactNode, key?: string }) {
+function StepContainer({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+  key?: string;
+}) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
@@ -67,29 +135,49 @@ function StepContainer({ title, icon, children }: { title: string, icon: ReactNo
   );
 }
 
-function CategoryButton({ active, label, onClick }: { active: boolean, label: string, onClick: () => void, key?: string }) {
+function CategoryButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  key?: string;
+}) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`p-6 border transition-all text-left flex flex-col justify-between h-32 ${
-        active 
-          ? "bg-[#141414] border-[#141414] text-white" 
+        active
+          ? "bg-[#141414] border-[#141414] text-white"
           : "bg-white border-[#D1D1D1] hover:border-[#141414]"
       }`}
     >
-      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] font-black uppercase tracking-widest">
+        {label}
+      </span>
       <ArrowRight size={16} className={active ? "text-white" : "opacity-20"} />
     </button>
   );
 }
 
-function SelectionButton({ active, label, onClick }: { active: boolean, label: string, onClick: () => void, key?: string }) {
+function SelectionButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  key?: string;
+}) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`w-full p-4 border text-left text-[10px] font-black uppercase tracking-widest transition-all flex justify-between items-center ${
-        active 
-          ? "bg-[#141414] border-[#141414] text-white" 
+        active
+          ? "bg-[#141414] border-[#141414] text-white"
           : "bg-white border-[#D1D1D1] hover:border-[#141414]"
       }`}
     >
@@ -99,41 +187,7 @@ function SelectionButton({ active, label, onClick }: { active: boolean, label: s
   );
 }
 
-function SupportSelect({ label, value, onChange }: { label: string, value: string, onChange: (v: any) => void }) {
-  return (
-    <div className="space-y-2">
-      <label className="text-[9px] font-bold uppercase opacity-50">{label}</label>
-      <select 
-        className="w-full bg-transparent border border-[#141414] p-3 text-[10px] font-bold uppercase outline-none"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="pinned">Apoiado (Pinned)</option>
-        <option value="fixed">Engastado (Fixed)</option>
-        <option value="free">Livre (Free)</option>
-      </select>
-    </div>
-  );
-}
-
-function InputGroup({ label, unit, value, onChange }: { label: string, unit: string, value: number, onChange: (v: number) => void }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <label className="text-[9px] font-bold uppercase opacity-50">{label}</label>
-        <span className="text-[8px] font-mono opacity-40">{unit}</span>
-      </div>
-      <input 
-        type="number"
-        className="w-full bg-transparent border border-[#141414] p-3 text-sm font-bold outline-none focus:bg-white"
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      />
-    </div>
-  );
-}
-
-function SolutionCard({ solution }: { solution: Solution, key?: string }) {
+function SolutionCard({ solution }: { solution: Solution; key?: string }) {
   const rankColors = {
     minima: "bg-gray-100 text-gray-800 border-gray-200",
     economica: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -151,47 +205,129 @@ function SolutionCard({ solution }: { solution: Solution, key?: string }) {
   };
 
   return (
-    <div className={`border border-[#141414] bg-white p-6 relative overflow-hidden transition-all hover:shadow-lg ${!solution.isApproved ? "opacity-60" : ""}`}>
+    <div
+      className={`border border-[#141414] bg-white p-6 relative overflow-hidden transition-all hover:shadow-lg ${!solution.isApproved ? "opacity-60" : ""}`}
+    >
       <div className="flex justify-between items-start mb-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[8px] font-black uppercase px-2 py-1 border ${rankColors[solution.rank]}`}>
+            <span
+              className={`text-[8px] font-black uppercase px-2 py-1 border ${rankColors[solution.rank]}`}
+            >
               {rankLabels[solution.rank]}
             </span>
-            {solution.isApproved ? (
+            {solution.elu.verification.classificacao === "APROVADO_CONFORTO" ? (
               <span className="flex items-center gap-1 text-emerald-600 text-[8px] font-black uppercase">
                 <ShieldCheck size={12} />
-                Aprovada
+                Aprovado com Conforto
+              </span>
+            ) : solution.elu.verification.classificacao === "APROVADO_LIMITE" ? (
+              <span className="flex items-center gap-1 text-yellow-600 text-[8px] font-black uppercase">
+                <ShieldCheck size={12} />
+                Aprovado no Limite
+              </span>
+            ) : solution.elu.verification.classificacao === "CRITICO" ? (
+              <span className="flex items-center gap-1 text-orange-600 text-[8px] font-black uppercase">
+                <AlertCircle size={12} />
+                Crítico / Limite Normativo
               </span>
             ) : (
               <span className="flex items-center gap-1 text-red-600 text-[8px] font-black uppercase">
                 <AlertCircle size={12} />
-                Falha Técnica
+                Reprovado
+              </span>
+            )}
+            {solution.efficiencyClass && (
+              <span className={`text-[8px] font-black uppercase px-2 py-1 border ${
+                solution.efficiencyClass === "Alta" ? "bg-emerald-100 text-emerald-800 border-emerald-200" :
+                solution.efficiencyClass === "Média" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                solution.efficiencyClass === "Superdimensionado" ? "bg-blue-100 text-blue-800 border-blue-200" :
+                "bg-red-100 text-red-800 border-red-200"
+              }`}>
+                {solution.efficiencyClass} ({solution.globalEfficiency.toFixed(1)}%)
               </span>
             )}
           </div>
-          <h4 className="text-lg font-black uppercase tracking-tighter">{solution.profile.code}</h4>
-          <p className="text-[10px] font-bold uppercase opacity-40">{solution.profile.series} • Vidro {solution.glass.thickness}mm {solution.glass.type}</p>
+          <h4 className="text-lg font-black uppercase tracking-tighter">
+            {solution.profile.code}
+          </h4>
+          <p className="text-[10px] font-bold uppercase opacity-40">
+            {solution.profile.series} • Vidro {solution.glass.thickness}mm{" "}
+            {solution.glass.type}
+          </p>
         </div>
         <div className="text-right">
-          <p className="text-[9px] font-bold uppercase opacity-40 mb-1">Índice de Uso (ELU)</p>
-          <p className={`text-2xl font-black tracking-tighter ${solution.elu.usageIndex > 90 ? "text-red-600" : "text-[#141414]"}`}>
+          <p className="text-[9px] font-bold uppercase opacity-40 mb-1">
+            Índice de Uso (ELU)
+          </p>
+          <p
+            className={`text-2xl font-black tracking-tighter ${solution.elu.usageIndex > 90 ? "text-red-600" : "text-[#141414]"}`}
+          >
             {solution.elu.usageIndex.toFixed(1)}%
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <MiniStat label="Inércia (Ix)" value={`${solution.profile.ix.toFixed(1)}`} unit="cm⁴" />
-        <MiniStat label="Flecha (ELS)" value={`${solution.els.deflection.toFixed(2)}`} unit="mm" subtext={`Lim: ${solution.els.deflectionLimit.toFixed(2)}`} />
-        <MiniStat label="Momento (ELU)" value={`${solution.elu.momentSoliciting.toFixed(2)}`} unit="kNm" subtext={`Res: ${solution.elu.momentResistant.toFixed(2)}`} />
-        <MiniStat label="Peso" value={`${solution.profile.weight.toFixed(2)}`} unit="kg/m" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <MiniStat
+          label="Inércia (Ix)"
+          value={`${solution.profile.ix.toFixed(1)}`}
+          unit="cm⁴"
+        />
+        <MiniStat
+          label="Módulo (Wx)"
+          value={`${solution.profile.wx.toFixed(1)}`}
+          unit="cm³"
+        />
+        <MiniStat
+          label="Flecha (ELS)"
+          value={`${solution.els.deflection.toFixed(2)}`}
+          unit="mm"
+          subtext={`Lim: ${solution.els.deflectionLimit.toFixed(2)}`}
+        />
+        <MiniStat
+          label="Momento (ELU)"
+          value={`${solution.elu.momentSoliciting.toFixed(2)}`}
+          unit="kNm"
+          subtext={`Res: ${solution.elu.momentResistant.toFixed(2)}`}
+        />
+        <MiniStat
+          label="Cortante (Vd)"
+          value={`${solution.elu.shearSoliciting.toFixed(2)}`}
+          unit="kN"
+          subtext={`Res: ${solution.elu.shearResistant.toFixed(2)}`}
+        />
+        <MiniStat
+          label="Tensão Vidro"
+          value={`${solution.glassResult.stress.toFixed(1)}`}
+          unit="MPa"
+          subtext={`Adm: ${solution.glassResult.admissibleStress.toFixed(1)}`}
+        />
+        <MiniStat
+          label="Peso"
+          value={`${solution.profile.weight.toFixed(2)}`}
+          unit="kg/m"
+        />
+        <MiniStat
+          label="Uso Vidro"
+          value={`${((solution.glassResult.stress / solution.glassResult.admissibleStress) * 100).toFixed(1)}`}
+          unit="%"
+        />
+      </div>
+
+      <div className="mt-4 p-3 bg-[#F9F9F7] border border-[#141414]/10 text-[10px] font-bold uppercase opacity-60">
+        <p>Recomendação Técnica: {solution.elu.verification.recomendacaoTecnica}</p>
       </div>
 
       {/* Progress Bar for Usage */}
-      <div className="mt-6 h-1 bg-[#E4E3E0] relative">
-        <div 
-          className={`absolute top-0 left-0 h-full transition-all duration-500 ${solution.elu.usageIndex > 100 ? "bg-red-600" : "bg-[#086775]"}`}
+      <div className="mt-4 h-1 bg-[#E4E3E0] relative">
+        <div
+          className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+            solution.elu.verification.classificacao === "REPROVADO" ? "bg-red-600" :
+            solution.elu.verification.classificacao === "CRITICO" ? "bg-orange-500" :
+            solution.elu.verification.classificacao === "APROVADO_LIMITE" ? "bg-yellow-500" :
+            "bg-emerald-500"
+          }`}
           style={{ width: `${Math.min(solution.elu.usageIndex, 100)}%` }}
         />
       </div>
@@ -203,29 +339,122 @@ function SolutionCard({ solution }: { solution: Solution, key?: string }) {
 
 function ConfiguratorApp() {
   const { state, dispatch } = useConfigurator();
-  const [results, setResults] = useState<{ metrics: CalculationMetrics, solutions: Solution[] } | null>(null);
+  const [results, setResults] = useState<{
+    metrics: CalculationMetrics;
+    solutions: Solution[];
+  } | null>(null);
+  const [comparisonResults, setComparisonResults] = useState<ComparisonResult[] | null>(null);
+  const [status, setStatus] = useState<string>("Aguardando preenchimento...");
+  const [showReportPreview, setShowReportPreview] = useState(false);
 
-  const filteredTypologies = useMemo(() => getCompatibleTypologies(state.category), [state.category]);
-  const filteredProfiles = useMemo(() => getCompatibleProfiles(state.supplierId, state.category), [state.supplierId, state.category]);
-  const filteredGlasses = useMemo(() => getCompatibleGlasses("laminated"), []); // Defaulting to laminated for now, could be dynamic
+  const filteredTypologies = useMemo(
+    () => getCompatibleTypologies(state.category),
+    [state.category],
+  );
+  const filteredProfiles = useMemo(
+    () => getCompatibleProfiles(state.aluminumSupplierId, state.category),
+    [state.aluminumSupplierId, state.category],
+  );
+  const filteredGlasses = useMemo(
+    () => getCompatibleGlasses(state.glassSupplierId, state.glassType),
+    [state.glassSupplierId, state.glassType],
+  );
 
   useEffect(() => {
-    if (state.category && state.typologyId && state.supplierId && state.height > 0 && state.width > 0) {
+    const validatedConfig = getValidatedConfig(state);
+
+    if (validatedConfig) {
+      setStatus("Calculando...");
       const timer = setTimeout(() => {
-        const typology = TYPOLOGIES.find(t => t.id === state.typologyId);
+        const typology = TYPOLOGIES.find(
+          (t) => t.id === validatedConfig.typologyId,
+        );
+        
         if (typology) {
-          const res = runStructuralEngine(state, filteredProfiles, filteredGlasses, typology);
-          setResults(res);
+          if (state.compareSuppliers) {
+            // Run comparison
+            const compRes = runComparison(
+              validatedConfig,
+              SUPPLIERS,
+              filteredProfiles, // This is not used correctly in comparisonService, we'll fix it
+              filteredGlasses,
+              typology
+            );
+            setComparisonResults(compRes);
+            
+            // Also run normal engine for the first supplier to get metrics
+            const res = runStructuralEngine(
+              validatedConfig,
+              getCompatibleProfiles(SUPPLIERS[0].id, state.category),
+              filteredGlasses,
+              typology
+            );
+            setResults(res);
+            setStatus("Comparação concluída");
+          } else {
+            setComparisonResults(null);
+            const profilesToTest = state.profileId && !state.autoOptimize
+              ? filteredProfiles.filter(p => p.code === state.profileId)
+              : filteredProfiles;
+              
+            const glassesToTest = state.glassId
+              ? filteredGlasses.filter(g => g.id === state.glassId)
+              : filteredGlasses;
+
+            const res = runStructuralEngine(
+              validatedConfig,
+              profilesToTest,
+              glassesToTest,
+              typology,
+            );
+            setResults(res);
+            setStatus(
+              res.solutions.length > 0 && res.solutions[0].isApproved
+                ? "Solução aprovada"
+                : "Solução reprovada",
+            );
+          }
         }
       }, 300); // Debounce
       return () => clearTimeout(timer);
     } else {
       setResults(null);
+      setStatus("Preencha todos os campos obrigatórios (*)");
     }
   }, [state, filteredProfiles, filteredGlasses]);
 
-  const nextStep = () => dispatch({ type: "SET_STEP", payload: Math.min(state.step + 1, 5) });
-  const prevStep = () => dispatch({ type: "SET_STEP", payload: Math.max(state.step - 1, 1) });
+  const nextStep = () =>
+    dispatch({ type: "SET_STEP", payload: Math.min(state.step + 1, 6) });
+  const prevStep = () =>
+    dispatch({ type: "SET_STEP", payload: Math.max(state.step - 1, 1) });
+
+  const handleExportPDF = () => {
+    if (results && results.solutions.length > 0) {
+      generatePDF(state, {
+        vk: results.metrics.vk,
+        q: results.metrics.q,
+        windPressure: results.metrics.windPressure,
+        performanceClass: "Classe B", // Mock
+        maxMoment: results.solutions[0].elu.momentSoliciting || 0,
+        momentCoefficient: 8,
+        deflectionCoefficient: 5 / 384,
+        requiredIx: results.solutions[0].profile.ix || 0,
+        requiredWx: results.solutions[0].profile.wx || 0,
+        glassStress: results.solutions[0].glassResult.stress || 0,
+        glassAlpha: 0.5,
+        slsPassed: results.solutions[0].els.passed || false,
+        ulsPassed: results.solutions[0].elu.passed || false,
+        glassPassed: results.solutions[0].glassResult.passed || false,
+        glassSpecification: `${results.solutions[0].glass.thickness}mm ${results.solutions[0].glass.type}`,
+        totalLoad: results.metrics.totalLoad,
+        solutions: results.solutions,
+        bestSolution: results.solutions[0],
+        effectiveSpan: results.metrics.effectiveSpan,
+        area: results.metrics.area,
+        structuralSystem: results.metrics.structuralSystem,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#086775] selection:text-white">
@@ -236,17 +465,37 @@ function ConfiguratorApp() {
               <Calculator className="text-white" size={20} />
             </div>
             <div>
-              <h1 className="text-sm font-black uppercase tracking-tighter leading-none">EsquadriasCalc Pro</h1>
-              <p className="text-[10px] font-bold uppercase opacity-40 tracking-widest">Dimensionamento Estrutural</p>
+              <h1 className="text-sm font-black uppercase tracking-tighter leading-none">
+                EsquadriasCalc Pro
+              </h1>
+              <p className="text-[10px] font-bold uppercase opacity-40 tracking-widest">
+                Dimensionamento Estrutural
+              </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-6">
-            <HeaderStat label="Status" value={results ? "Calculado" : "Incompleto"} />
+            <HeaderStat label="Status" value={status} />
             <div className="flex items-center gap-2">
-              <button onClick={() => dispatch({ type: "RESET" })} className="border border-[#141414] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[#E4E3E0]">Reset</button>
-              <button disabled={!results} className="bg-[#141414] text-white px-6 py-2 text-[10px] font-bold uppercase hover:bg-[#086775] disabled:opacity-20 flex items-center gap-2">
-                <Download size={14} /> PDF
+              <button
+                onClick={() => dispatch({ type: "RESET" })}
+                className="border border-[#141414] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[#E4E3E0]"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setShowReportPreview(!showReportPreview)}
+                disabled={!results}
+                className={`border border-[#141414] px-4 py-2 text-[10px] font-bold uppercase transition-colors disabled:opacity-20 ${showReportPreview ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+              >
+                {showReportPreview ? "Ocultar Pré-visualização" : "Pré-visualizar Relatório"}
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={!results || !showReportPreview}
+                className="bg-[#141414] text-white px-6 py-2 text-[10px] font-bold uppercase hover:bg-[#086775] disabled:opacity-20 flex items-center gap-2"
+              >
+                <Download size={14} /> Exportar PDF
               </button>
             </div>
           </div>
@@ -255,190 +504,629 @@ function ConfiguratorApp() {
 
       <main className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[450px_1fr] min-h-[calc(100vh-73px)]">
         {/* Left Column: Guided Workflow */}
-        <aside className="bg-white border-r border-[#141414] flex flex-col">
-          <div className="p-8 border-b border-[#141414] bg-[#F9F9F7]">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xs font-black uppercase tracking-widest">Configurador</h2>
-              <span className="text-[10px] font-mono opacity-40">Passo {state.step} de 5</span>
+        <aside className="bg-white border-r border-[#141414] flex flex-col overflow-y-auto">
+          <div className="p-8 space-y-10">
+            {/* Section 1: Identificação */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+                <LayoutGrid size={16} /> 1. Identificação
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["janela", "porta", "guarda-corpo", "pele-de-vidro"].map(
+                  (cat) => (
+                    <CategoryButton
+                      key={cat}
+                      active={state.category === cat}
+                      label={cat}
+                      onClick={() =>
+                        dispatch({
+                          type: "SET_CATEGORY",
+                          payload: cat as ItemCategory,
+                        })
+                      }
+                    />
+                  ),
+                )}
+              </div>
+
+              {state.category && (
+                <div className="space-y-3 pt-4">
+                  <label className="text-[9px] font-bold uppercase opacity-50 flex items-center gap-1">
+                    Tipologia <span className="text-red-500">*</span>
+                  </label>
+                  {filteredTypologies.map((t) => (
+                    <SelectionButton
+                      key={t.id}
+                      active={state.typologyId === t.id}
+                      label={t.name}
+                      onClick={() =>
+                        dispatch({ type: "SET_TYPOLOGY", payload: t.id })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(s => (
-                <div key={s} className={`h-1 flex-1 transition-all ${s <= state.step ? "bg-[#141414]" : "bg-[#D1D1D1]"}`} />
-              ))}
+
+            {/* Section 2: Especificação Técnica */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-[#141414] pb-2">
+                <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                  <Settings size={16} /> 2. Especificação Técnica
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
+                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#141414] transition-colors ${state.compareSuppliers ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+                  >
+                    Comparar Fornecedores
+                  </button>
+                  <button
+                    onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
+                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#141414] transition-colors ${state.autoOptimize ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+                  >
+                    Otimização Automática
+                  </button>
+                </div>
+              </div>
+
+              {state.typologyId && !state.compareSuppliers && (
+                <SmartSelectGroup
+                  label="Fornecedor do Sistema"
+                  value={state.systemSupplierId}
+                  onChange={(v) => dispatch({ type: "SET_SYSTEM_SUPPLIER", payload: v })}
+                  options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
+                />
+              )}
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#141414]/10">
+                <SmartInputGroup
+                  label="Altura Total"
+                  unit="mm"
+                  value={state.height}
+                  onChange={(v) =>
+                    dispatch({
+                      type: "SET_GEOMETRY",
+                      payload: { ...state, height: v },
+                    })
+                  }
+                />
+                <SmartInputGroup
+                  label="Largura Influência"
+                  unit="mm"
+                  value={state.width}
+                  onChange={(v) =>
+                    dispatch({
+                      type: "SET_GEOMETRY",
+                      payload: { ...state, width: v },
+                    })
+                  }
+                />
+              </div>
+
+              {(state.category === "guarda-corpo" ||
+                state.category === "pele-de-vidro") && (
+                <div className="grid grid-cols-1 gap-4 pt-4 border-t border-[#141414]/10">
+                  <SmartInputGroup
+                    label="Comprimento Total"
+                    unit="mm"
+                    value={state.length}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_GEOMETRY",
+                        payload: { ...state, length: v },
+                      })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-4 pt-4 border-t border-[#141414]/10">
+                {!state.compareSuppliers && (
+                  <SmartSelectGroup
+                    label="Fornecedor do Alumínio"
+                    value={state.aluminumSupplierId}
+                    onChange={(v) => dispatch({ type: "SET_ALUMINUM_SUPPLIER", payload: v })}
+                    options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
+                    required={false}
+                  />
+                )}
+
+                {!state.autoOptimize && !state.compareSuppliers && (
+                  <SmartSelectGroup
+                    label="Perfil de Alumínio"
+                    value={state.profileId}
+                    onChange={(v) => dispatch({ type: "SET_PROFILE", payload: v })}
+                    options={filteredProfiles.map(p => ({ value: p.code, label: `${p.code} - ${p.series} (Ix: ${p.ix}cm⁴, Wx: ${p.wx}cm³)` }))}
+                    placeholder="Selecione um perfil..."
+                  />
+                )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-[#141414]/10">
+                {!state.compareSuppliers && (
+                  <SmartSelectGroup
+                    label="Fornecedor do Vidro"
+                    value={state.glassSupplierId}
+                    onChange={(v) => dispatch({ type: "SET_GLASS_SUPPLIER", payload: v })}
+                    options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
+                    required={false}
+                  />
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <SmartSelectGroup
+                    label="Tipo de Vidro"
+                    value={state.glassType}
+                    onChange={(v) => dispatch({ type: "SET_MATERIALS", payload: { ...state, glassType: v as any } })}
+                    options={[
+                      { value: "monolithic", label: "Monolítico" },
+                      { value: "tempered", label: "Temperado" },
+                      { value: "laminated", label: "Laminado" },
+                    ]}
+                  />
+                  
+                  <SmartSelectGroup
+                    label="Espessura do Vidro"
+                    value={state.glassId}
+                    onChange={(v) => dispatch({ type: "SET_GLASS", payload: v })}
+                    options={filteredGlasses.map(g => ({ value: g.id, label: `${g.thickness}mm` }))}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-8">
-            <AnimatePresence mode="wait">
-              {state.step === 1 && (
-                <StepContainer key="step1" title="Categoria do Item" icon={<LayoutGrid size={18} />}>
-                  <div className="grid grid-cols-2 gap-3">
-                    {["janela", "porta", "guarda-corpo", "pele-de-vidro"].map((cat) => (
-                      <CategoryButton 
-                        key={cat}
-                        active={state.category === cat}
-                        label={cat}
-                        onClick={() => dispatch({ type: "SET_CATEGORY", payload: cat as ItemCategory })}
-                      />
-                    ))}
+            {/* Section 3: Vento e Localização */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+                <Wind size={16} /> 3. Ação do Vento
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <SmartInputGroup
+                  label="Altura da Edificação"
+                  unit="m"
+                  value={state.buildingHeight}
+                  onChange={(v) =>
+                    dispatch({
+                      type: "SET_GEOMETRY",
+                      payload: { ...state, buildingHeight: v },
+                    })
+                  }
+                />
+              </div>
+
+              {Number(state.buildingHeight) > 90 ? (
+                <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Edificação &gt; 90m (Ensaio em Túnel de Vento Obrigatório)</span>
                   </div>
-                </StepContainer>
-              )}
-
-              {state.step === 2 && (
-                <StepContainer key="step2" title="Tipologia" icon={<Box size={18} />}>
-                  <div className="space-y-3">
-                    {filteredTypologies.map((t) => (
-                      <SelectionButton 
-                        key={t.id}
-                        active={state.typologyId === t.id}
-                        label={t.name}
-                        onClick={() => dispatch({ type: "SET_TYPOLOGY", payload: t.id })}
-                      />
-                    ))}
-                    {filteredTypologies.length === 0 && (
-                      <p className="text-[10px] font-bold uppercase opacity-40 text-center py-8 border border-dashed border-[#141414]">Selecione uma categoria primeiro</p>
-                    )}
+                  <SmartInputGroup
+                    label="Pressão de Ensaio"
+                    unit="Pa"
+                    value={state.windTunnelPressure}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_WIND",
+                        payload: { ...state, windTunnelPressure: v },
+                      })
+                    }
+                  />
+                </div>
+              ) : (
+                <>
+                  <MapaIsopletas
+                    selectedRegion={state.region}
+                    onSelect={(region) => {
+                      const v0 = getRegionWindSpeed(region);
+                      dispatch({
+                        type: "SET_WIND",
+                        payload: { ...state, region, windSpeed: v0 },
+                      });
+                    }}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <SmartInputGroup
+                      label="Velocidade (V0)"
+                      unit="m/s"
+                      value={state.windSpeed}
+                      onChange={(v) =>
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, windSpeed: v },
+                        })
+                      }
+                    />
+                    <SmartInputGroup
+                      label="Coef. Pressão (Cp)"
+                      unit="-"
+                      value={state.cp}
+                      onChange={(v) =>
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, cp: v as number },
+                        })
+                      }
+                    />
                   </div>
-                </StepContainer>
+                </>
               )}
+            </div>
 
-              {state.step === 3 && (
-                <StepContainer key="step3" title="Fornecedor" icon={<Building2 size={18} />}>
-                  <div className="space-y-3">
-                    {SUPPLIERS.map((s) => (
-                      <SelectionButton 
-                        key={s.id}
-                        active={state.supplierId === s.id}
-                        label={s.name}
-                        onClick={() => dispatch({ type: "SET_SUPPLIER", payload: s.id })}
-                      />
-                    ))}
-                  </div>
-                </StepContainer>
-              )}
-
-              {state.step === 4 && (
-                <StepContainer key="step4" title="Geometria e Apoios" icon={<Maximize2 size={18} />}>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputGroup 
-                        label="Altura Total" 
-                        unit="mm" 
-                        value={state.height} 
-                        onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, height: v } })} 
-                      />
-                      <InputGroup 
-                        label="Largura Influência" 
-                        unit="mm" 
-                        value={state.width} 
-                        onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, width: v } })} 
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Condições de Contorno</p>
-                      <div className="grid grid-cols-2 gap-3">
-                        <SupportSelect 
-                          label="Base" 
-                          value={state.supportBottom} 
-                          onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportBottom: v } })} 
-                        />
-                        <SupportSelect 
-                          label="Topo" 
-                          value={state.supportTop} 
-                          onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportTop: v } })} 
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </StepContainer>
-              )}
-
-              {state.step === 5 && (
-                <StepContainer key="step5" title="Vento e Localização" icon={<Wind size={18} />}>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase opacity-50">Região do Brasil</label>
-                      <select 
-                        className="w-full bg-transparent border border-[#141414] p-3 text-sm font-bold outline-none"
-                        value={state.region}
-                        onChange={(e) => {
-                          const v0 = getRegionWindSpeed(e.target.value);
-                          dispatch({ type: "SET_WIND", payload: { ...state, region: e.target.value, windSpeed: v0 } });
-                        }}
-                      >
-                        {BRAZIL_REGIONS.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputGroup label="V0" unit="m/s" value={state.windSpeed} onChange={(v) => dispatch({ type: "SET_WIND", payload: { ...state, windSpeed: v } })} />
-                      <InputGroup label="Coef. Pressão (Cp)" unit="-" value={state.cp} onChange={(v) => dispatch({ type: "SET_WIND", payload: { ...state, cp: v } })} />
-                    </div>
-                  </div>
-                </StepContainer>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="p-8 border-t border-[#141414] flex gap-4 bg-white">
-            {state.step > 1 && (
-              <button 
-                onClick={prevStep}
-                className="flex-1 border border-[#141414] py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-[#E4E3E0] transition-colors flex items-center justify-center gap-2"
-              >
-                <ChevronLeft size={14} />
-                Voltar
-              </button>
-            )}
-            {state.step < 5 && state.category && (
-              <button 
-                onClick={nextStep}
-                className="flex-[2] bg-[#141414] text-white py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-[#086775] transition-colors flex items-center justify-center gap-2"
-              >
-                Próximo
-                <ChevronRight size={14} />
-              </button>
-            )}
+            {/* Section 4: Modelo Estrutural */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+                <Maximize2 size={16} /> 4. Modelo Estrutural
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <SmartSelectGroup
+                  label="Apoio Base"
+                  value={state.supportBottom}
+                  onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportBottom: v as any } })}
+                  options={[
+                    { value: "pinned", label: "Apoiado (Pinned)" },
+                    { value: "fixed", label: "Engastado (Fixed)" },
+                    { value: "free", label: "Livre (Free)" },
+                  ]}
+                />
+                <SmartSelectGroup
+                  label="Apoio Topo"
+                  value={state.supportTop}
+                  onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportTop: v as any } })}
+                  options={[
+                    { value: "pinned", label: "Apoiado (Pinned)" },
+                    { value: "fixed", label: "Engastado (Fixed)" },
+                    { value: "free", label: "Livre (Free)" },
+                  ]}
+                />
+              </div>
+            </div>
           </div>
         </aside>
 
         {/* Right Column: Real-time Results */}
-        <section className="overflow-y-auto p-8 lg:p-12 space-y-12 bg-[#E4E3E0]">
-          {!results ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-20">
-              <Calculator size={64} strokeWidth={1} />
-              <p className="text-xs font-black uppercase tracking-widest">Aguardando Configuração</p>
-            </div>
-          ) : (
-            <div className="space-y-12">
-              {/* Top Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
-                <MetricBox label="Pressão de Vento" value={results.metrics.windPressure.toFixed(2)} unit="kN/m²" />
-                <MetricBox label="Velocidade VK" value={results.metrics.vk.toFixed(1)} unit="m/s" />
-                <MetricBox label="Carga Total" value={results.metrics.totalLoad.toFixed(2)} unit="kN/m" />
+        <section className="overflow-y-auto p-8 lg:p-12 space-y-8 bg-[#E4E3E0]">
+          {showReportPreview && results ? (
+            <div className="space-y-8 bg-white p-8 border border-[#141414] shadow-lg max-w-4xl mx-auto">
+              <div className="border-b border-[#141414] pb-4 mb-6">
+                <h2 className="text-2xl font-black uppercase tracking-tighter">Aba de Verificação Técnica</h2>
+                <p className="text-xs font-bold uppercase opacity-40">Pré-visualização do Memorial de Cálculo</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Dados de Entrada</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li><span className="font-bold opacity-50">Categoria:</span> {state.category.toUpperCase()}</li>
+                    <li><span className="font-bold opacity-50">Tipologia:</span> {TYPOLOGIES.find(t => t.id === state.typologyId)?.name}</li>
+                    <li><span className="font-bold opacity-50">Altura:</span> {state.height} mm</li>
+                    <li><span className="font-bold opacity-50">Largura:</span> {state.width} mm</li>
+                    <li><span className="font-bold opacity-50">Região:</span> {state.region || "N/A"}</li>
+                    <li><span className="font-bold opacity-50">Pressão Vento:</span> {results.metrics.windPressure.toFixed(2)} kN/m²</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Modelo Estrutural</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li><span className="font-bold opacity-50">Sistema:</span> {results.metrics.structuralSystem}</li>
+                    <li><span className="font-bold opacity-50">Vão Efetivo:</span> {(results.metrics.effectiveSpan * 1000).toFixed(0)} mm</li>
+                    <li><span className="font-bold opacity-50">Carga Linear:</span> {results.metrics.totalLoad.toFixed(2)} kN/m</li>
+                  </ul>
+                </div>
               </div>
 
-              {/* Solutions Ranking */}
-              <div className="space-y-6">
-                <div className="flex justify-between items-end">
-                  <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <Layers size={14} />
-                    Soluções Recomendadas
-                  </h3>
-                  <span className="text-[10px] font-bold uppercase opacity-40">{results.solutions.length} Opções Encontradas</span>
+              {results.solutions.length > 0 && (
+                <div className="mt-8 space-y-8">
+                  <div className="bg-[#F9F9F7] p-6 border border-[#141414]">
+                    <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Diagnóstico Estrutural (Melhor Solução)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div>
+                        <p className="font-black text-xl mb-1">{results.solutions[0].profile.code}</p>
+                        <p className="text-[10px] font-bold uppercase opacity-50 mb-4">{results.solutions[0].profile.series} • Vidro {results.solutions[0].glass.thickness}mm {results.solutions[0].glass.type}</p>
+                        
+                        <div className={`inline-block px-3 py-1 border text-[10px] font-black uppercase mb-4 ${
+                          results.solutions[0].elu.verification.classificacao === "REPROVADO" ? "bg-red-100 text-red-800 border-red-200" :
+                          results.solutions[0].elu.verification.classificacao === "CRITICO" ? "bg-orange-100 text-orange-800 border-orange-200" :
+                          results.solutions[0].elu.verification.classificacao === "APROVADO_LIMITE" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                          "bg-emerald-100 text-emerald-800 border-emerald-200"
+                        }`}>
+                          {results.solutions[0].elu.verification.classificacao.replace("_", " ")}
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase opacity-70 leading-relaxed">
+                        <p className="mb-2">Recomendação Técnica:</p>
+                        <p className="bg-white p-3 border border-[#141414]/10">{results.solutions[0].elu.verification.recomendacaoTecnica}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Diagramas de Análise Estrutural</h3>
+                    <DetailedDiagrams
+                      solution={results.solutions[0]}
+                      metrics={results.metrics}
+                    />
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 gap-4">
-                  {results.solutions.map((sol) => (
-                    <SolutionCard key={sol.id} solution={sol} />
-                  ))}
+              )}
+
+              {/* Viable Solutions List */}
+              {results.solutions.length > 0 && (
+                <div className="mt-12">
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Lista de Soluções Viáveis</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-[10px]">
+                      <thead>
+                        <tr className="border-b border-[#141414]">
+                          <th className="p-2 font-black uppercase">Perfil</th>
+                          <th className="p-2 font-black uppercase">Vidro</th>
+                          <th className="p-2 font-black uppercase">Uso ELU</th>
+                          <th className="p-2 font-black uppercase">Flecha</th>
+                          <th className="p-2 font-black uppercase">Eficiência</th>
+                          <th className="p-2 font-black uppercase">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {results.solutions.filter(s => s.isApproved).map(sol => (
+                          <tr key={sol.id} className="border-b border-[#141414]/10">
+                            <td className="p-2 font-bold">{sol.profile.code}</td>
+                            <td className="p-2">{sol.glass.thickness}mm {sol.glass.type}</td>
+                            <td className="p-2">{sol.elu.usageIndex.toFixed(1)}%</td>
+                            <td className="p-2">{sol.els.deflection.toFixed(2)} mm</td>
+                            <td className="p-2">{sol.globalEfficiency.toFixed(1)}%</td>
+                            <td className="p-2">
+                              <span className={`font-bold ${
+                                sol.elu.verification.classificacao === "APROVADO_CONFORTO" ? "text-emerald-600" :
+                                sol.elu.verification.classificacao === "APROVADO_LIMITE" ? "text-yellow-600" :
+                                "text-orange-600"
+                              }`}>
+                                {sol.elu.verification.classificacao.replace("_", " ")}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : !results ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-20">
+              <Calculator size={64} strokeWidth={1} />
+              <p className="text-xs font-black uppercase tracking-widest">
+                Aguardando Configuração
+              </p>
+              <p className="text-[10px] font-bold uppercase">
+                Preencha todos os campos obrigatórios (*) no painel lateral para
+                visualizar os resultados.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Quick Parameters Edit */}
+              <div className="bg-white border border-[#141414] p-6">
+                <h3 className="text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Maximize2 size={14} />
+                  Ajuste Rápido de Parâmetros
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <SmartInputGroup
+                    label="Altura Total"
+                    unit="mm"
+                    value={state.height}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_GEOMETRY",
+                        payload: { ...state, height: v },
+                      })
+                    }
+                  />
+                  <SmartInputGroup
+                    label="Largura de Influência"
+                    unit="mm"
+                    value={state.width}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_GEOMETRY",
+                        payload: { ...state, width: v },
+                      })
+                    }
+                  />
+                  <div className="space-y-2">
+                    <SmartSelectGroup
+                      label="Região de Vento"
+                      value={state.region}
+                      onChange={(v) => {
+                        const v0 = getRegionWindSpeed(v);
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: {
+                            ...state,
+                            region: v,
+                            windSpeed: v0,
+                          },
+                        });
+                      }}
+                      options={BRAZIL_REGIONS.map(r => ({ value: r.name, label: r.name }))}
+                    />
+                  </div>
+                  <SmartInputGroup
+                    label={Number(state.buildingHeight) > 90 ? "Pressão (Pa)" : "Velocidade (V0)"}
+                    unit={Number(state.buildingHeight) > 90 ? "Pa" : "m/s"}
+                    value={Number(state.buildingHeight) > 90 ? state.windTunnelPressure : state.windSpeed}
+                    onChange={(v) => {
+                      if (Number(state.buildingHeight) > 90) {
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, windTunnelPressure: v },
+                        });
+                      } else {
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, windSpeed: v },
+                        });
+                      }
+                    }}
+                  />
+                  <SmartSelectGroup
+                    label="Apoio Base"
+                    value={state.supportBottom}
+                    onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportBottom: v as any } })}
+                    options={[
+                      { value: "pinned", label: "Apoiado (Pinned)" },
+                      { value: "fixed", label: "Engastado (Fixed)" },
+                      { value: "free", label: "Livre (Free)" },
+                    ]}
+                  />
+                  <SmartSelectGroup
+                    label="Apoio Topo"
+                    value={state.supportTop}
+                    onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportTop: v as any } })}
+                    options={[
+                      { value: "pinned", label: "Apoiado (Pinned)" },
+                      { value: "fixed", label: "Engastado (Fixed)" },
+                      { value: "free", label: "Livre (Free)" },
+                    ]}
+                  />
+                  <SmartSelectGroup
+                    label="Tipo de Vidro"
+                    value={state.glassType}
+                    onChange={(v) => dispatch({ type: "SET_MATERIALS", payload: { ...state, glassType: v as any } })}
+                    options={[
+                      { value: "monolithic", label: "Monolítico" },
+                      { value: "tempered", label: "Temperado" },
+                      { value: "laminated", label: "Laminado" },
+                    ]}
+                  />
+                  <SmartSelectGroup
+                    label="Espessura do Vidro"
+                    value={state.glassId}
+                    onChange={(v) => dispatch({ type: "SET_GLASS", payload: v })}
+                    options={filteredGlasses.map(g => ({ value: g.id, label: `${g.thickness}mm` }))}
+                  />
                 </div>
               </div>
+
+              {/* Top Metrics */}
+              {!state.compareSuppliers && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+                  <MetricBox
+                    label="Pressão de Vento"
+                    value={results.metrics.windPressure.toFixed(2)}
+                    unit="kN/m²"
+                  />
+                  <MetricBox
+                    label="Velocidade VK"
+                    value={results.metrics.vk.toFixed(1)}
+                    unit="m/s"
+                  />
+                  <MetricBox
+                    label="Carga Total"
+                    value={results.metrics.totalLoad.toFixed(2)}
+                    unit="kN/m"
+                  />
+                </div>
+              )}
+
+              {/* Comparison Results */}
+              {state.compareSuppliers && comparisonResults && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-end">
+                    <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                      <Layers size={14} />
+                      Comparativo entre Fornecedores
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#141414]">
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Fornecedor</th>
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Perfil Viável</th>
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Peso (kg/m)</th>
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Eficiência (%)</th>
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comparisonResults.map((res, idx) => (
+                          <tr key={res.supplier.id} className={`border-b border-[#141414]/10 ${idx === 0 && res.bestSolution ? 'bg-[#086775]/10' : ''}`}>
+                            <td className="p-3 text-sm font-bold flex items-center gap-2">
+                              {idx === 0 && res.bestSolution && <CheckCircle2 size={14} className="text-[#086775]" />}
+                              {res.supplier.name}
+                            </td>
+                            <td className="p-3 text-sm">{res.bestSolution?.profile.code || "-"}</td>
+                            <td className="p-3 text-sm">{res.bestSolution?.profile.weight.toFixed(2) || "-"}</td>
+                            <td className="p-3 text-sm">{res.bestSolution?.globalEfficiency.toFixed(1) || "-"}</td>
+                            <td className="p-3 text-sm">
+                              {res.bestSolution ? (
+                                <span className="text-[#086775] font-bold">Aprovado</span>
+                              ) : (
+                                <span className="text-red-600 font-bold">Sem solução</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Solutions Ranking */}
+              {!state.compareSuppliers && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-end">
+                    <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                      <Layers size={14} />
+                      {state.profileId && state.glassId && !state.autoOptimize ? "Solução Calculada" : "Soluções Viáveis Encontradas"}
+                    </h3>
+                    <span className="text-[10px] font-bold uppercase opacity-40">
+                      {results.solutions.length} Opções Encontradas
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {results.solutions.map((sol, idx) => (
+                      <div key={sol.id} className={`relative ${idx === 0 && state.autoOptimize ? 'ring-2 ring-[#086775]' : ''}`}>
+                        {idx === 0 && state.autoOptimize && (
+                          <div className="absolute -top-3 left-4 bg-[#086775] text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest z-10">
+                            Perfil estrutural otimizado recomendado
+                          </div>
+                        )}
+                        <SolutionCard solution={sol} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Technical Detailing */}
+              {!state.compareSuppliers && results.solutions.length > 0 && (
+                <div className="space-y-6 pt-8 border-t border-[#141414]/10">
+                  <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                    <FileText size={14} />
+                    Análise Estrutural Detalhada
+                  </h3>
+                  <DetailedDiagrams
+                    solution={results.solutions[0]}
+                    metrics={results.metrics}
+                  />
+                </div>
+              )}
             </div>
           )}
         </section>
       </main>
+
+      <footer className="border-t border-[#141414] bg-white py-4 mt-8">
+        <div className="max-w-[1600px] mx-auto px-8 text-center text-[10px] font-bold uppercase opacity-40 tracking-widest">
+          Developed by Eduardo Marques
+        </div>
+      </footer>
     </div>
   );
 }
