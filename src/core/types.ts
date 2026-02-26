@@ -42,6 +42,8 @@ export interface RegionWind {
   v0: number; // m/s
 }
 
+export type SystemType = "biapoiada" | "engaste-engaste" | "engaste-livre" | "biapoiada-1-apoio" | "biapoiada-2-apoios";
+
 export interface ConfigState {
   step: number;
   category: ItemCategory | "";
@@ -54,12 +56,15 @@ export interface ConfigState {
   height: number | "";
   width: number | "";
   length: number | ""; // Comprimento total (para guarda-corpo/pele de vidro)
+  systemType: SystemType;
   intermediateSupports: number | "";
   spans: number[]; // Distâncias entre apoios
   supportTop: SupportCondition;
   supportBottom: SupportCondition;
   supportLeft: SupportCondition;
   supportRight: SupportCondition;
+  intermediateSupport1Type: SupportCondition;
+  intermediateSupport2Type: SupportCondition;
   buildingHeight: number | "";
   windTunnelPressure: number | "";
   region: string;
@@ -106,8 +111,11 @@ export interface CalculationMetrics {
   q: number;
   windPressure: number;
   totalLoad: number;
-  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo";
+  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo" | "Engastado-Apoiado";
   windMethod: "NBR 6123" | "Túnel de Vento";
+  spans?: number[];
+  intermediateSupports?: number;
+  intermediateSupportTypes?: SupportCondition[];
 }
 
 export type StatusClassificacao = "APROVADO_CONFORTO" | "APROVADO_LIMITE" | "CRITICO" | "REPROVADO";

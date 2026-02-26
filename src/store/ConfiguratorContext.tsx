@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
-import { ConfigState, ItemCategory, SupportCondition } from "../core/types";
+import { ConfigState, ItemCategory, SupportCondition, SystemType } from "../core/types";
 import { SUPPLIERS, BRAZIL_REGIONS } from "../core/constants";
 
 type Action =
@@ -17,12 +17,15 @@ type Action =
         height: number | "";
         width: number | "";
         length: number | "";
+        systemType: SystemType;
         intermediateSupports: number | "";
         spans: number[];
         supportTop: SupportCondition;
         supportBottom: SupportCondition;
         supportLeft: SupportCondition;
         supportRight: SupportCondition;
+        intermediateSupport1Type: SupportCondition;
+        intermediateSupport2Type: SupportCondition;
         buildingHeight: number | "";
       };
     }
@@ -62,12 +65,15 @@ const initialState: ConfigState = {
   height: "",
   width: "",
   length: "",
+  systemType: "biapoiada",
   intermediateSupports: "",
   spans: [],
   supportTop: "pinned",
   supportBottom: "pinned",
   supportLeft: "pinned",
   supportRight: "pinned",
+  intermediateSupport1Type: "pinned",
+  intermediateSupport2Type: "pinned",
   buildingHeight: "",
   windTunnelPressure: "",
   region: "",

@@ -6,7 +6,7 @@ export const calculateElu = (
   profile: Profile,
   totalLoad: number,
   effectiveSpan: number,
-  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo",
+  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo" | "Engastado-Apoiado",
 ): EluResult => {
   const { allowableStress } = state;
   const gammaM = 1.1; // Partial safety factor for aluminum
@@ -18,6 +18,7 @@ export const calculateElu = (
   else if (structuralSystem === "Consola")
     km = 2; // Cantilever (qL²/2)
   else if (structuralSystem === "Contínuo") km = 10; // Approximation for continuous beams (qL²/10)
+  else if (structuralSystem === "Engastado-Apoiado") km = 8; // qL²/8 (max moment is 9qL²/128, which is ~qL²/14.2, but support moment is qL²/8)
 
   // Soliciting Moment (Md) in kNm
   // M = (q * L²) / Km
@@ -30,6 +31,7 @@ export const calculateElu = (
   else if (structuralSystem === "Consola")
     shearCoeff = 1; // qL
   else if (structuralSystem === "Contínuo") shearCoeff = 1.6; // ~0.6qL
+  else if (structuralSystem === "Engastado-Apoiado") shearCoeff = 1.6; // 5qL/8 at fixed support
 
   const shearSoliciting = (totalLoad * effectiveSpan) / shearCoeff;
   

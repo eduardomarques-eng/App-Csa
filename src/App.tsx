@@ -346,6 +346,32 @@ function ConfiguratorApp() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[] | null>(null);
   const [status, setStatus] = useState<string>("Aguardando preenchimento...");
   const [showReportPreview, setShowReportPreview] = useState(false);
+  const [isCustomCp, setIsCustomCp] = useState(false);
+
+  const handleLengthChange = (field: "length" | "height", value: number | "") => {
+    const newState = { ...state, [field]: value };
+    const totalLength = Number(newState.length || newState.height);
+    
+    if (state.intermediateSupports && state.intermediateSupports > 0) {
+      const currentSpansSum = state.spans.reduce((a, b) => a + b, 0);
+      if (Math.abs(currentSpansSum - totalLength) > 0.1) {
+        if (state.intermediateSupports === 1) {
+          newState.spans = [totalLength / 2, totalLength / 2];
+        } else if (state.intermediateSupports === 2) {
+          newState.spans = [totalLength / 3, totalLength / 3, totalLength / 3];
+        }
+      }
+    }
+    
+    dispatch({ type: "SET_GEOMETRY", payload: newState });
+  };
+
+  useEffect(() => {
+    const predefinedCps = [-1.4, -1.0, 1.0, -2.0, -0.7];
+    if (!predefinedCps.includes(state.cp) && !isCustomCp) {
+      setIsCustomCp(true);
+    }
+  }, [state.cp]);
 
   const filteredTypologies = useMemo(
     () => getCompatibleTypologies(state.category),
@@ -584,12 +610,7 @@ function ConfiguratorApp() {
                   label="Altura Total"
                   unit="mm"
                   value={state.height}
-                  onChange={(v) =>
-                    dispatch({
-                      type: "SET_GEOMETRY",
-                      payload: { ...state, height: v },
-                    })
-                  }
+                  onChange={(v) => handleLengthChange("height", v)}
                 />
                 <SmartInputGroup
                   label="Largura Influência"
@@ -611,12 +632,7 @@ function ConfiguratorApp() {
                     label="Comprimento Total"
                     unit="mm"
                     value={state.length}
-                    onChange={(v) =>
-                      dispatch({
-                        type: "SET_GEOMETRY",
-                        payload: { ...state, length: v },
-                      })
-                    }
+                    onChange={(v) => handleLengthChange("length", v)}
                   />
                 </div>
               )}
@@ -738,17 +754,52 @@ function ConfiguratorApp() {
                         })
                       }
                     />
-                    <SmartInputGroup
-                      label="Coef. Pressão (Cp)"
-                      unit="-"
-                      value={state.cp}
-                      onChange={(v) =>
-                        dispatch({
-                          type: "SET_WIND",
-                          payload: { ...state, cp: v as number },
-                        })
-                      }
-                    />
+                    <div className="space-y-2">
+                      {!isCustomCp ? (
+                        <SmartSelectGroup
+                          label="Coef. Pressão (Cp)"
+                          value={state.cp.toString()}
+                          onChange={(v) => {
+                            if (v === "custom") {
+                              setIsCustomCp(true);
+                            } else {
+                              dispatch({
+                                type: "SET_WIND",
+                                payload: { ...state, cp: parseFloat(v) },
+                              });
+                            }
+                          }}
+                          options={[
+                            { value: "-1.4", label: "Alta Sucção (-1.4) - Quinas/Bordas" },
+                            { value: "-1.0", label: "Sucção Normal (-1.0) - Meio da Fachada" },
+                            { value: "1.0", label: "Pressão Positiva (+1.0) - Barlavento" },
+                            { value: "-2.0", label: "Sucção Extrema (-2.0) - Coberturas/Marquises" },
+                            { value: "-0.7", label: "Padrão (-0.7)" },
+                            { value: "custom", label: "Personalizado..." },
+                          ]}
+                        />
+                      ) : (
+                        <div className="relative">
+                          <SmartInputGroup
+                            label="Coef. Pressão (Cp)"
+                            unit="-"
+                            value={state.cp}
+                            onChange={(v) =>
+                              dispatch({
+                                type: "SET_WIND",
+                                payload: { ...state, cp: v as number },
+                              })
+                            }
+                          />
+                          <button
+                            onClick={() => setIsCustomCp(false)}
+                            className="absolute top-0 right-0 text-[8px] font-bold uppercase opacity-50 hover:opacity-100"
+                          >
+                            Voltar
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
@@ -760,28 +811,183 @@ function ConfiguratorApp() {
                 <Maximize2 size={16} /> 4. Modelo Estrutural
               </h3>
               
-              <div className="grid grid-cols-2 gap-3">
-                <SmartSelectGroup
-                  label="Apoio Base"
-                  value={state.supportBottom}
-                  onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportBottom: v as any } })}
-                  options={[
-                    { value: "pinned", label: "Apoiado (Pinned)" },
-                    { value: "fixed", label: "Engastado (Fixed)" },
-                    { value: "free", label: "Livre (Free)" },
-                  ]}
-                />
-                <SmartSelectGroup
-                  label="Apoio Topo"
-                  value={state.supportTop}
-                  onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportTop: v as any } })}
-                  options={[
-                    { value: "pinned", label: "Apoiado (Pinned)" },
-                    { value: "fixed", label: "Engastado (Fixed)" },
-                    { value: "free", label: "Livre (Free)" },
-                  ]}
-                />
-              </div>
+              {(state.category === "pele-de-vidro" || state.category === "guarda-corpo") && (
+                <div className="space-y-4">
+                  <SmartSelectGroup
+                    label="Tipo de Sistema"
+                    value={state.systemType}
+                    onChange={(v) => {
+                      const sysType = v as any;
+                      let numSupports = 0;
+                      if (sysType === "biapoiada-1-apoio") numSupports = 1;
+                      if (sysType === "biapoiada-2-apoios") numSupports = 2;
+                      
+                      let top = state.supportTop;
+                      let bottom = state.supportBottom;
+                      
+                      if (sysType === "biapoiada") {
+                        top = "pinned";
+                        bottom = "pinned";
+                      } else if (sysType === "engaste-engaste") {
+                        top = "fixed";
+                        bottom = "fixed";
+                      } else if (sysType === "engaste-livre") {
+                        top = "free";
+                        bottom = "fixed";
+                      } else if (sysType === "engaste-apoio") {
+                        top = "pinned";
+                        bottom = "fixed";
+                      } else if (sysType === "biapoiada-1-apoio" || sysType === "biapoiada-2-apoios") {
+                        top = "pinned";
+                        bottom = "pinned";
+                      }
+                      
+                      dispatch({
+                        type: "SET_GEOMETRY",
+                        payload: {
+                          ...state,
+                          systemType: sysType,
+                          intermediateSupports: numSupports,
+                          supportTop: top,
+                          supportBottom: bottom,
+                          spans: numSupports === 1 ? [Number(state.length || state.height) / 2, Number(state.length || state.height) / 2] : 
+                                 numSupports === 2 ? [Number(state.length || state.height) / 3, Number(state.length || state.height) / 3, Number(state.length || state.height) / 3] : []
+                        }
+                      });
+                    }}
+                    options={[
+                      { value: "biapoiada", label: "Viga biapoiada simples" },
+                      { value: "engaste-engaste", label: "Engaste–engaste" },
+                      { value: "engaste-livre", label: "Engaste–livre (balanço)" },
+                      { value: "engaste-apoio", label: "Engaste–apoio" },
+                      { value: "biapoiada-1-apoio", label: "Biapoiada + 1 apoio intermediário" },
+                      { value: "biapoiada-2-apoios", label: "Biapoiada + 2 apoios intermediários" },
+                    ]}
+                  />
+                  
+                  {state.intermediateSupports === 1 && (
+                    <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Apoio Intermediário 1</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SmartSelectGroup
+                          label="Tipo de Vínculo"
+                          value={state.intermediateSupport1Type}
+                          onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, intermediateSupport1Type: v as any } })}
+                          options={[
+                            { value: "pinned", label: "Apoio simples" },
+                            { value: "fixed", label: "Engaste" },
+                            { value: "free", label: "Livre" },
+                          ]}
+                        />
+                        <SmartInputGroup
+                          label="Distância (a)"
+                          unit="mm"
+                          value={state.spans[0] || ""}
+                          onChange={(v) => {
+                            const L = Number(state.length || state.height);
+                            const val = Number(v) || 0;
+                            if (val >= 0 && val <= L) {
+                              dispatch({
+                                type: "SET_GEOMETRY",
+                                payload: { ...state, spans: [val, L - val] }
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-[9px] font-bold opacity-50">Distância restante (b): {Number(state.length || state.height) - (state.spans[0] || 0)} mm</p>
+                    </div>
+                  )}
+                  
+                  {state.intermediateSupports === 2 && (
+                    <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Apoios Intermediários</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SmartSelectGroup
+                          label="Vínculo Apoio 1"
+                          value={state.intermediateSupport1Type}
+                          onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, intermediateSupport1Type: v as any } })}
+                          options={[
+                            { value: "pinned", label: "Apoio simples" },
+                            { value: "fixed", label: "Engaste" },
+                            { value: "free", label: "Livre" },
+                          ]}
+                        />
+                        <SmartInputGroup
+                          label="Distância 1 (a)"
+                          unit="mm"
+                          value={state.spans[0] || ""}
+                          onChange={(v) => {
+                            const L = Number(state.length || state.height);
+                            const val = Number(v) || 0;
+                            const span2 = state.spans[1] || L/3;
+                            if (val >= 0 && val + span2 <= L) {
+                              dispatch({
+                                type: "SET_GEOMETRY",
+                                payload: { ...state, spans: [val, span2, L - val - span2] }
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SmartSelectGroup
+                          label="Vínculo Apoio 2"
+                          value={state.intermediateSupport2Type}
+                          onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, intermediateSupport2Type: v as any } })}
+                          options={[
+                            { value: "pinned", label: "Apoio simples" },
+                            { value: "fixed", label: "Engaste" },
+                            { value: "free", label: "Livre" },
+                          ]}
+                        />
+                        <SmartInputGroup
+                          label="Distância 2 (b)"
+                          unit="mm"
+                          value={state.spans[1] || ""}
+                          onChange={(v) => {
+                            const L = Number(state.length || state.height);
+                            const val = Number(v) || 0;
+                            const span1 = state.spans[0] || L/3;
+                            if (val >= 0 && val + span1 <= L) {
+                              dispatch({
+                                type: "SET_GEOMETRY",
+                                payload: { ...state, spans: [span1, val, L - span1 - val] }
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-[9px] font-bold opacity-50">Distância restante (c): {Number(state.length || state.height) - (state.spans[0] || 0) - (state.spans[1] || 0)} mm</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {state.category !== "pele-de-vidro" && state.category !== "guarda-corpo" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <SmartSelectGroup
+                    label="Apoio Base"
+                    value={state.supportBottom}
+                    onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportBottom: v as any } })}
+                    options={[
+                      { value: "pinned", label: "Apoio simples" },
+                      { value: "fixed", label: "Engaste" },
+                      { value: "free", label: "Livre" },
+                    ]}
+                  />
+                  <SmartSelectGroup
+                    label="Apoio Topo"
+                    value={state.supportTop}
+                    onChange={(v) => dispatch({ type: "SET_GEOMETRY", payload: { ...state, supportTop: v as any } })}
+                    options={[
+                      { value: "pinned", label: "Apoio simples" },
+                      { value: "fixed", label: "Engaste" },
+                      { value: "free", label: "Livre" },
+                    ]}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </aside>
@@ -917,12 +1123,7 @@ function ConfiguratorApp() {
                     label="Altura Total"
                     unit="mm"
                     value={state.height}
-                    onChange={(v) =>
-                      dispatch({
-                        type: "SET_GEOMETRY",
-                        payload: { ...state, height: v },
-                      })
-                    }
+                    onChange={(v) => handleLengthChange("height", v)}
                   />
                   <SmartInputGroup
                     label="Largura de Influência"
@@ -971,6 +1172,52 @@ function ConfiguratorApp() {
                       }
                     }}
                   />
+                  <div className="space-y-2">
+                    {!isCustomCp ? (
+                      <SmartSelectGroup
+                        label="Coef. Pressão (Cp)"
+                        value={state.cp.toString()}
+                        onChange={(v) => {
+                          if (v === "custom") {
+                            setIsCustomCp(true);
+                          } else {
+                            dispatch({
+                              type: "SET_WIND",
+                              payload: { ...state, cp: parseFloat(v) },
+                            });
+                          }
+                        }}
+                        options={[
+                          { value: "-1.4", label: "Alta Sucção (-1.4) - Quinas/Bordas" },
+                          { value: "-1.0", label: "Sucção Normal (-1.0) - Meio da Fachada" },
+                          { value: "1.0", label: "Pressão Positiva (+1.0) - Barlavento" },
+                          { value: "-2.0", label: "Sucção Extrema (-2.0) - Coberturas/Marquises" },
+                          { value: "-0.7", label: "Padrão (-0.7)" },
+                          { value: "custom", label: "Personalizado..." },
+                        ]}
+                      />
+                    ) : (
+                      <div className="relative">
+                        <SmartInputGroup
+                          label="Coef. Pressão (Cp)"
+                          unit="-"
+                          value={state.cp}
+                          onChange={(v) =>
+                            dispatch({
+                              type: "SET_WIND",
+                              payload: { ...state, cp: v as number },
+                            })
+                          }
+                        />
+                        <button
+                          onClick={() => setIsCustomCp(false)}
+                          className="absolute top-0 right-0 text-[8px] font-bold uppercase opacity-50 hover:opacity-100"
+                        >
+                          Voltar
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <SmartSelectGroup
                     label="Apoio Base"
                     value={state.supportBottom}

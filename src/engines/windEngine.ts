@@ -26,19 +26,22 @@ export const calculateWindPressure = (
   const area = (height / 1000) * (width / 1000); // m²
 
   let effectiveSpan = height / 1000; // m
-  let structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo" =
+  let structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo" | "Engastado-Apoiado" =
     "Biapoiado";
 
   if (category === "guarda-corpo" || category === "pele-de-vidro") {
     if (intermediateSupports > 0) {
       structuralSystem = "Contínuo";
       // For continuous beams, effective span is the maximum span
-      effectiveSpan = Math.max(...spans) / 1000;
+      effectiveSpan = spans && spans.length > 0 ? Math.max(...spans) / 1000 : (length || height) / 1000;
     } else {
+      effectiveSpan = (length || height) / 1000;
       if (supportBottom === "fixed" && supportTop === "free") {
         structuralSystem = "Consola";
       } else if (supportBottom === "fixed" && supportTop === "fixed") {
         structuralSystem = "Engastado";
+      } else if ((supportBottom === "fixed" && supportTop === "pinned") || (supportBottom === "pinned" && supportTop === "fixed")) {
+        structuralSystem = "Engastado-Apoiado";
       } else {
         structuralSystem = "Biapoiado";
       }
@@ -48,6 +51,8 @@ export const calculateWindPressure = (
       structuralSystem = "Consola";
     } else if (supportBottom === "fixed" && supportTop === "fixed") {
       structuralSystem = "Engastado";
+    } else if ((supportBottom === "fixed" && supportTop === "pinned") || (supportBottom === "pinned" && supportTop === "fixed")) {
+      structuralSystem = "Engastado-Apoiado";
     } else {
       structuralSystem = "Biapoiado";
     }
@@ -105,5 +110,8 @@ export const calculateWindPressure = (
     totalLoad,
     structuralSystem,
     windMethod,
+    spans,
+    intermediateSupports,
+    intermediateSupportTypes: [state.intermediateSupport1Type, state.intermediateSupport2Type].filter(Boolean) as any,
   };
 };

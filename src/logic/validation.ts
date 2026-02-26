@@ -15,7 +15,8 @@ export const isFormularioValido = (state: ConfigState): boolean => {
     return false;
 
   if (state.category === "guarda-corpo" || state.category === "pele-de-vidro") {
-    if (state.length === "" || state.length <= 0 || isNaN(state.length))
+    const totalLength = Number(state.length || state.height);
+    if (!totalLength || totalLength <= 0 || isNaN(totalLength))
       return false;
     if (
       state.intermediateSupports === "" ||
@@ -24,10 +25,12 @@ export const isFormularioValido = (state: ConfigState): boolean => {
     )
       return false;
 
-    // Validate spans sum equals length
-    const totalSpans = state.spans.reduce((acc, val) => acc + val, 0);
-    // Allow a small margin of error for floating point arithmetic
-    if (Math.abs(totalSpans - Number(state.length)) > 0.1) return false;
+    if (state.intermediateSupports > 0) {
+      // Validate spans sum equals length
+      const totalSpans = state.spans.reduce((acc, val) => acc + val, 0);
+      // Allow a small margin of error for floating point arithmetic
+      if (isNaN(totalSpans) || Math.abs(totalSpans - totalLength) > 0.1) return false;
+    }
   }
 
   if (state.buildingHeight > 90) {

@@ -7,7 +7,7 @@ export const calculateEls = (
   totalLoad: number,
   effectiveSpan: number,
   typology: Typology,
-  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo",
+  structuralSystem: "Biapoiado" | "Engastado" | "Consola" | "Contínuo" | "Engastado-Apoiado",
 ): ElsResult => {
   const { modulusOfElasticity } = state;
 
@@ -18,6 +18,7 @@ export const calculateEls = (
   else if (structuralSystem === "Consola")
     kf = 1 / 8; // Cantilever (qL⁴/8EI)
   else if (structuralSystem === "Contínuo") kf = 2 / 384; // Approximation for continuous beams
+  else if (structuralSystem === "Engastado-Apoiado") kf = 1 / 185; // ~0.0054 * qL⁴/EI
 
   // Deflection (f) in mm
   // f = (Kf * q * L⁴) / (E * I)

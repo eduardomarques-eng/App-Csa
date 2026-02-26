@@ -26,6 +26,10 @@ export const DetailedDiagrams: React.FC<DetailedDiagramsProps> = ({
 
   // 1. Esquema Estrutural
   const renderEsquemaEstrutural = () => {
+    const totalLength = metrics.spans && metrics.spans.length > 0 
+      ? metrics.spans.reduce((a, b) => a + b, 0) / 1000 
+      : effectiveSpan;
+
     return (
       <div className="border border-[#141414] bg-white p-4">
         <h4 className="text-[10px] font-black uppercase tracking-widest mb-2 border-b border-[#141414]/10 pb-1">
@@ -43,12 +47,45 @@ export const DetailedDiagrams: React.FC<DetailedDiagramsProps> = ({
               <line x1={padding - 15} y1={midY + 15} x2={padding + 15} y2={midY + 15} stroke="#141414" strokeWidth="2" />
               <text x={padding} y={midY + 30} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">A</text>
               
+              {/* Intermediate Supports */}
+              {metrics.spans && metrics.spans.length > 1 && metrics.spans.map((span, index) => {
+                if (index === metrics.spans!.length - 1) return null; // Skip the last one as it's the right support
+                
+                // Calculate position based on cumulative span
+                const cumulativeSpan = metrics.spans!.slice(0, index + 1).reduce((a, b) => a + b, 0) / 1000;
+                const xPos = padding + (cumulativeSpan / totalLength) * drawWidth;
+                
+                const supportType = metrics.intermediateSupportTypes?.[index] || "pinned";
+                
+                return (
+                  <g key={`int-support-${index}`}>
+                    {supportType === "pinned" && (
+                      <>
+                        <polygon points={`${xPos},${midY} ${xPos - 10},${midY + 15} ${xPos + 10},${midY + 15}`} fill="none" stroke="#141414" strokeWidth="2" />
+                        <line x1={xPos - 15} y1={midY + 15} x2={xPos + 15} y2={midY + 15} stroke="#141414" strokeWidth="2" />
+                        <circle cx={xPos - 5} cy={midY + 18} r="3" fill="#141414" />
+                        <circle cx={xPos + 5} cy={midY + 18} r="3" fill="#141414" />
+                      </>
+                    )}
+                    {supportType === "fixed" && (
+                      <rect x={xPos - 10} y={midY} width="20" height="15" fill="#141414" />
+                    )}
+                    {supportType === "free" && (
+                      <text x={xPos} y={midY + 15} fontSize="10" textAnchor="middle" fill="#141414" opacity="0.5">Livre</text>
+                    )}
+                    <text x={xPos} y={midY + 30} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">{String.fromCharCode(66 + index)}</text>
+                  </g>
+                );
+              })}
+
               {/* Right Support (Roller) */}
               <polygon points={`${svgWidth - padding},${midY} ${svgWidth - padding - 10},${midY + 15} ${svgWidth - padding + 10},${midY + 15}`} fill="none" stroke="#141414" strokeWidth="2" />
               <line x1={svgWidth - padding - 15} y1={midY + 15} x2={svgWidth - padding + 15} y2={midY + 15} stroke="#141414" strokeWidth="2" />
               <circle cx={svgWidth - padding - 5} cy={midY + 18} r="3" fill="#141414" />
               <circle cx={svgWidth - padding + 5} cy={midY + 18} r="3" fill="#141414" />
-              <text x={svgWidth - padding} y={midY + 30} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">B</text>
+              <text x={svgWidth - padding} y={midY + 30} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">
+                {metrics.spans && metrics.spans.length > 1 ? String.fromCharCode(65 + metrics.spans.length) : 'B'}
+              </text>
             </>
           ) : structuralSystem === "Engastado" ? (
             <>
@@ -59,6 +96,18 @@ export const DetailedDiagrams: React.FC<DetailedDiagramsProps> = ({
               <rect x={svgWidth - padding} y={midY - 20} width="10" height="40" fill="#141414" />
               <text x={svgWidth - padding + 20} y={midY + 5} fontSize="12" textAnchor="start" fill="#141414" fontWeight="bold">B</text>
             </>
+          ) : structuralSystem === "Engastado-Apoiado" ? (
+            <>
+              {/* Left Fixed */}
+              <rect x={padding - 10} y={midY - 20} width="10" height="40" fill="#141414" />
+              <text x={padding - 20} y={midY + 5} fontSize="12" textAnchor="end" fill="#141414" fontWeight="bold">A</text>
+              {/* Right Support (Roller) */}
+              <polygon points={`${svgWidth - padding},${midY} ${svgWidth - padding - 10},${midY + 15} ${svgWidth - padding + 10},${midY + 15}`} fill="none" stroke="#141414" strokeWidth="2" />
+              <line x1={svgWidth - padding - 15} y1={midY + 15} x2={svgWidth - padding + 15} y2={midY + 15} stroke="#141414" strokeWidth="2" />
+              <circle cx={svgWidth - padding - 5} cy={midY + 18} r="3" fill="#141414" />
+              <circle cx={svgWidth - padding + 5} cy={midY + 18} r="3" fill="#141414" />
+              <text x={svgWidth - padding} y={midY + 30} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">B</text>
+            </>
           ) : (
             // Consola (Cantilever)
             <>
@@ -67,11 +116,39 @@ export const DetailedDiagrams: React.FC<DetailedDiagramsProps> = ({
             </>
           )}
 
-          {/* Dimension Line */}
-          <line x1={padding} y1={svgHeight - 15} x2={svgWidth - padding} y2={svgHeight - 15} stroke="#141414" strokeWidth="1" />
-          <line x1={padding} y1={svgHeight - 20} x2={padding} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
-          <line x1={svgWidth - padding} y1={svgHeight - 20} x2={svgWidth - padding} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
-          <text x={svgWidth / 2} y={svgHeight - 20} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">L = {fmt(effectiveSpan)} m</text>
+          {/* Dimension Lines */}
+          {metrics.spans && metrics.spans.length > 1 ? (
+            <>
+              {metrics.spans.map((span, index) => {
+                const spanMeters = span / 1000;
+                const prevCumulative = index === 0 ? 0 : metrics.spans!.slice(0, index).reduce((a, b) => a + b, 0) / 1000;
+                const startX = padding + (prevCumulative / totalLength) * drawWidth;
+                const endX = padding + ((prevCumulative + spanMeters) / totalLength) * drawWidth;
+                const midX = (startX + endX) / 2;
+                
+                return (
+                  <g key={`dim-${index}`}>
+                    <line x1={startX} y1={svgHeight - 15} x2={endX} y2={svgHeight - 15} stroke="#141414" strokeWidth="1" />
+                    <line x1={startX} y1={svgHeight - 20} x2={startX} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
+                    <line x1={endX} y1={svgHeight - 20} x2={endX} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
+                    <text x={midX} y={svgHeight - 20} fontSize="10" textAnchor="middle" fill="#141414">{fmt(spanMeters)} m</text>
+                  </g>
+                );
+              })}
+              {/* Total Length Dimension */}
+              <line x1={padding} y1={svgHeight - 35} x2={svgWidth - padding} y2={svgHeight - 35} stroke="#141414" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1={padding} y1={svgHeight - 40} x2={padding} y2={svgHeight - 30} stroke="#141414" strokeWidth="1" />
+              <line x1={svgWidth - padding} y1={svgHeight - 40} x2={svgWidth - padding} y2={svgHeight - 30} stroke="#141414" strokeWidth="1" />
+              <text x={svgWidth / 2} y={svgHeight - 40} fontSize="10" textAnchor="middle" fill="#141414" fontWeight="bold">L total = {fmt(totalLength)} m</text>
+            </>
+          ) : (
+            <>
+              <line x1={padding} y1={svgHeight - 15} x2={svgWidth - padding} y2={svgHeight - 15} stroke="#141414" strokeWidth="1" />
+              <line x1={padding} y1={svgHeight - 20} x2={padding} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
+              <line x1={svgWidth - padding} y1={svgHeight - 20} x2={svgWidth - padding} y2={svgHeight - 10} stroke="#141414" strokeWidth="1" />
+              <text x={svgWidth / 2} y={svgHeight - 20} fontSize="12" textAnchor="middle" fill="#141414" fontWeight="bold">L = {fmt(effectiveSpan)} m</text>
+            </>
+          )}
         </svg>
       </div>
     );
