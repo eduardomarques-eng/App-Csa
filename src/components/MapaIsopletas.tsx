@@ -20,8 +20,8 @@ const RegionCard: React.FC<RegionProps> = ({
     onClick={onClick}
     className={`relative p-4 border text-left transition-all overflow-hidden flex flex-col justify-between h-24 ${
       selected
-        ? "border-[#141414] shadow-md"
-        : "border-[#D1D1D1] hover:border-[#141414] opacity-70 hover:opacity-100"
+        ? "border-[#006874] shadow-md"
+        : "border-[#D1D1D1] hover:border-[#006874] opacity-70 hover:opacity-100"
     }`}
   >
     <div
@@ -38,7 +38,7 @@ const RegionCard: React.FC<RegionProps> = ({
       </div>
     </div>
     {selected && (
-      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#141414]" />
+      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#006874]" />
     )}
   </button>
 );
@@ -84,7 +84,7 @@ export const MapaIsopletas = ({
         ))}
       </div>
 
-      <div className="p-4 bg-[#F9F9F7] border border-[#141414] mt-4">
+      <div className="p-4 bg-[#F9F9F7] border border-[#006874] mt-4">
         <p className="text-[9px] font-bold uppercase opacity-60 leading-relaxed">
           * Selecione a região correspondente ao local da obra conforme o mapa
           de isopletas da NBR 6123. A velocidade básica do vento (V0) é o

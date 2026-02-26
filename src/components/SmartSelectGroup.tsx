@@ -36,7 +36,7 @@ export const SmartSelectGroup = ({
       <div className="relative">
         <select
           className={`w-full bg-transparent border p-3 text-sm font-bold outline-none focus:bg-white transition-colors appearance-none ${
-            isInvalid ? "border-red-500 bg-red-50" : "border-[#141414]"
+            isInvalid ? "border-red-500 bg-red-50" : "border-[#006874]"
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -54,7 +54,7 @@ export const SmartSelectGroup = ({
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2">
           {isInvalid && <AlertCircle size={14} className="text-red-500" />}
           <svg
-            className={`w-4 h-4 ${isInvalid ? "text-red-500" : "text-[#141414]"}`}
+            className={`w-4 h-4 ${isInvalid ? "text-red-500" : "text-[#006874]"}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

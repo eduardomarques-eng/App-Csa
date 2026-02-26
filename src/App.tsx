@@ -44,6 +44,7 @@ import { MapaIsopletas } from "./components/MapaIsopletas";
 import { SmartInputGroup } from "./components/SmartInputGroup";
 import { SmartSelectGroup } from "./components/SmartSelectGroup";
 import { DetailedDiagrams } from "./components/DetailedDiagrams";
+import { CalculationMemory } from "./components/CalculationMemory";
 
 // --- UI Components ---
 
@@ -70,7 +71,7 @@ function MetricBox({
   unit: string;
 }) {
   return (
-    <div className="border border-[#141414] bg-white p-6">
+    <div className="border border-[#006874] bg-white p-6">
       <p className="text-[9px] font-bold uppercase opacity-40 tracking-widest mb-2">
         {label}
       </p>
@@ -125,7 +126,7 @@ function StepContainer({
       className="space-y-6"
     >
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 border border-[#141414] flex items-center justify-center bg-[#F9F9F7]">
+        <div className="w-8 h-8 border border-[#006874] flex items-center justify-center bg-[#F9F9F7]">
           {icon}
         </div>
         <h3 className="text-sm font-black uppercase tracking-tight">{title}</h3>
@@ -150,8 +151,8 @@ function CategoryButton({
       onClick={onClick}
       className={`p-6 border transition-all text-left flex flex-col justify-between h-32 ${
         active
-          ? "bg-[#141414] border-[#141414] text-white"
-          : "bg-white border-[#D1D1D1] hover:border-[#141414]"
+          ? "bg-[#006874] border-[#006874] text-white"
+          : "bg-white border-[#D1D1D1] hover:border-[#006874]"
       }`}
     >
       <span className="text-[10px] font-black uppercase tracking-widest">
@@ -177,8 +178,8 @@ function SelectionButton({
       onClick={onClick}
       className={`w-full p-4 border text-left text-[10px] font-black uppercase tracking-widest transition-all flex justify-between items-center ${
         active
-          ? "bg-[#141414] border-[#141414] text-white"
-          : "bg-white border-[#D1D1D1] hover:border-[#141414]"
+          ? "bg-[#006874] border-[#006874] text-white"
+          : "bg-white border-[#D1D1D1] hover:border-[#006874]"
       }`}
     >
       {label}
@@ -187,7 +188,7 @@ function SelectionButton({
   );
 }
 
-function SolutionCard({ solution }: { solution: Solution; key?: string }) {
+function SolutionCard({ solution, onViewDetails }: { solution: Solution; key?: string; onViewDetails?: () => void }) {
   const rankColors = {
     minima: "bg-gray-100 text-gray-800 border-gray-200",
     economica: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -206,7 +207,7 @@ function SolutionCard({ solution }: { solution: Solution; key?: string }) {
 
   return (
     <div
-      className={`border border-[#141414] bg-white p-6 relative overflow-hidden transition-all hover:shadow-lg ${!solution.isApproved ? "opacity-60" : ""}`}
+      className={`border border-[#006874] bg-white p-6 relative overflow-hidden transition-all hover:shadow-lg ${!solution.isApproved ? "opacity-60" : ""}`}
     >
       <div className="flex justify-between items-start mb-6">
         <div>
@@ -256,15 +257,23 @@ function SolutionCard({ solution }: { solution: Solution; key?: string }) {
             {solution.glass.type}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right flex flex-col items-end">
           <p className="text-[9px] font-bold uppercase opacity-40 mb-1">
             Índice de Uso (ELU)
           </p>
           <p
-            className={`text-2xl font-black tracking-tighter ${solution.elu.usageIndex > 90 ? "text-red-600" : "text-[#141414]"}`}
+            className={`text-2xl font-black tracking-tighter ${solution.elu.usageIndex > 90 ? "text-red-600" : "text-[#006874]"}`}
           >
             {solution.elu.usageIndex.toFixed(1)}%
           </p>
+          {onViewDetails && (
+            <button 
+              onClick={onViewDetails}
+              className="mt-2 text-[9px] font-bold uppercase tracking-widest text-[#006874] hover:underline flex items-center gap-1"
+            >
+              Ver Detalhes <ArrowRight size={10} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -315,7 +324,7 @@ function SolutionCard({ solution }: { solution: Solution; key?: string }) {
         />
       </div>
 
-      <div className="mt-4 p-3 bg-[#F9F9F7] border border-[#141414]/10 text-[10px] font-bold uppercase opacity-60">
+      <div className="mt-4 p-3 bg-[#F9F9F7] border border-[#006874]/10 text-[10px] font-bold uppercase opacity-60">
         <p>Recomendação Técnica: {solution.elu.verification.recomendacaoTecnica}</p>
       </div>
 
@@ -346,6 +355,7 @@ function ConfiguratorApp() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[] | null>(null);
   const [status, setStatus] = useState<string>("Aguardando preenchimento...");
   const [showReportPreview, setShowReportPreview] = useState(false);
+  const [selectedSolutionId, setSelectedSolutionId] = useState<string | null>(null);
   const [isCustomCp, setIsCustomCp] = useState(false);
 
   const handleLengthChange = (field: "length" | "height", value: number | "") => {
@@ -434,6 +444,12 @@ function ConfiguratorApp() {
               typology,
             );
             setResults(res);
+            if (res.solutions.length > 0) {
+              const best = res.solutions.find(s => s.isApproved) || res.solutions[0];
+              setSelectedSolutionId(best.id);
+            } else {
+              setSelectedSolutionId(null);
+            }
             setStatus(
               res.solutions.length > 0 && res.solutions[0].isApproved
                 ? "Solução aprovada"
@@ -483,11 +499,11 @@ function ConfiguratorApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#086775] selection:text-white">
-      <header className="border-b border-[#141414] bg-white sticky top-0 z-50">
+    <div className="min-h-screen bg-[#E4E3E0] text-[#006874] font-sans selection:bg-[#086775] selection:text-white">
+      <header className="border-b border-[#006874] bg-white sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto flex justify-between items-center px-8 py-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#141414] flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#006874] flex items-center justify-center">
               <Calculator className="text-white" size={20} />
             </div>
             <div>
@@ -505,21 +521,21 @@ function ConfiguratorApp() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => dispatch({ type: "RESET" })}
-                className="border border-[#141414] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[#E4E3E0]"
+                className="border border-[#006874] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[#E4E3E0]"
               >
                 Reset
               </button>
               <button
                 onClick={() => setShowReportPreview(!showReportPreview)}
                 disabled={!results}
-                className={`border border-[#141414] px-4 py-2 text-[10px] font-bold uppercase transition-colors disabled:opacity-20 ${showReportPreview ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+                className={`border border-[#006874] px-4 py-2 text-[10px] font-bold uppercase transition-colors disabled:opacity-20 ${showReportPreview ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
               >
                 {showReportPreview ? "Ocultar Pré-visualização" : "Pré-visualizar Relatório"}
               </button>
               <button
                 onClick={handleExportPDF}
                 disabled={!results || !showReportPreview}
-                className="bg-[#141414] text-white px-6 py-2 text-[10px] font-bold uppercase hover:bg-[#086775] disabled:opacity-20 flex items-center gap-2"
+                className="bg-[#006874] text-white px-6 py-2 text-[10px] font-bold uppercase hover:bg-[#086775] disabled:opacity-20 flex items-center gap-2"
               >
                 <Download size={14} /> Exportar PDF
               </button>
@@ -530,11 +546,11 @@ function ConfiguratorApp() {
 
       <main className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[450px_1fr] min-h-[calc(100vh-73px)]">
         {/* Left Column: Guided Workflow */}
-        <aside className="bg-white border-r border-[#141414] flex flex-col overflow-y-auto">
+        <aside className="bg-white border-r border-[#006874] flex flex-col overflow-y-auto">
           <div className="p-8 space-y-10">
             {/* Section 1: Identificação */}
             <div className="space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#006874] pb-2">
                 <LayoutGrid size={16} /> 1. Identificação
               </h3>
               <div className="grid grid-cols-2 gap-3">
@@ -576,20 +592,20 @@ function ConfiguratorApp() {
 
             {/* Section 2: Especificação Técnica */}
             <div className="space-y-6">
-              <div className="flex justify-between items-center border-b border-[#141414] pb-2">
+              <div className="flex justify-between items-center border-b border-[#006874] pb-2">
                 <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                   <Settings size={16} /> 2. Especificação Técnica
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
-                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#141414] transition-colors ${state.compareSuppliers ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.compareSuppliers ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
                   >
                     Comparar Fornecedores
                   </button>
                   <button
                     onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
-                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#141414] transition-colors ${state.autoOptimize ? "bg-[#141414] text-white" : "hover:bg-[#E4E3E0]"}`}
+                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.autoOptimize ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
                   >
                     Otimização Automática
                   </button>
@@ -605,7 +621,7 @@ function ConfiguratorApp() {
                 />
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#141414]/10">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#006874]/10">
                 <SmartInputGroup
                   label="Altura Total"
                   unit="mm"
@@ -627,7 +643,7 @@ function ConfiguratorApp() {
 
               {(state.category === "guarda-corpo" ||
                 state.category === "pele-de-vidro") && (
-                <div className="grid grid-cols-1 gap-4 pt-4 border-t border-[#141414]/10">
+                <div className="grid grid-cols-1 gap-4 pt-4 border-t border-[#006874]/10">
                   <SmartInputGroup
                     label="Comprimento Total"
                     unit="mm"
@@ -637,7 +653,7 @@ function ConfiguratorApp() {
                 </div>
               )}
 
-              <div className="space-y-4 pt-4 border-t border-[#141414]/10">
+              <div className="space-y-4 pt-4 border-t border-[#006874]/10">
                 {!state.compareSuppliers && (
                   <SmartSelectGroup
                     label="Fornecedor do Alumínio"
@@ -659,7 +675,7 @@ function ConfiguratorApp() {
                 )}
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#141414]/10">
+              <div className="space-y-4 pt-4 border-t border-[#006874]/10">
                 {!state.compareSuppliers && (
                   <SmartSelectGroup
                     label="Fornecedor do Vidro"
@@ -694,7 +710,7 @@ function ConfiguratorApp() {
 
             {/* Section 3: Vento e Localização */}
             <div className="space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#006874] pb-2">
                 <Wind size={16} /> 3. Ação do Vento
               </h3>
               
@@ -713,7 +729,7 @@ function ConfiguratorApp() {
               </div>
 
               {Number(state.buildingHeight) > 90 ? (
-                <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
+                <div className="p-4 border border-[#006874] bg-[#F9F9F7] space-y-4">
                   <div className="flex items-center gap-2 text-red-600">
                     <AlertCircle size={16} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Edificação &gt; 90m (Ensaio em Túnel de Vento Obrigatório)</span>
@@ -807,7 +823,7 @@ function ConfiguratorApp() {
 
             {/* Section 4: Modelo Estrutural */}
             <div className="space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#141414] pb-2">
+              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#006874] pb-2">
                 <Maximize2 size={16} /> 4. Modelo Estrutural
               </h3>
               
@@ -856,7 +872,7 @@ function ConfiguratorApp() {
                       });
                     }}
                     options={[
-                      { value: "biapoiada", label: "Viga biapoiada simples" },
+                      { value: "biapoiada", label: "Biapoiada simples" },
                       { value: "engaste-engaste", label: "Engaste–engaste" },
                       { value: "engaste-livre", label: "Engaste–livre (balanço)" },
                       { value: "engaste-apoio", label: "Engaste–apoio" },
@@ -866,8 +882,8 @@ function ConfiguratorApp() {
                   />
                   
                   {state.intermediateSupports === 1 && (
-                    <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Apoio Intermediário 1</h4>
+                    <div className="p-4 border border-[#006874] bg-[#F9F9F7] space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#006874]/10 pb-2">Apoio Intermediário 1</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <SmartSelectGroup
                           label="Tipo de Vínculo"
@@ -900,8 +916,8 @@ function ConfiguratorApp() {
                   )}
                   
                   {state.intermediateSupports === 2 && (
-                    <div className="p-4 border border-[#141414] bg-[#F9F9F7] space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Apoios Intermediários</h4>
+                    <div className="p-4 border border-[#006874] bg-[#F9F9F7] space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#006874]/10 pb-2">Apoios Intermediários</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <SmartSelectGroup
                           label="Vínculo Apoio 1"
@@ -995,15 +1011,15 @@ function ConfiguratorApp() {
         {/* Right Column: Real-time Results */}
         <section className="overflow-y-auto p-8 lg:p-12 space-y-8 bg-[#E4E3E0]">
           {showReportPreview && results ? (
-            <div className="space-y-8 bg-white p-8 border border-[#141414] shadow-lg max-w-4xl mx-auto">
-              <div className="border-b border-[#141414] pb-4 mb-6">
+            <div className="space-y-8 bg-white p-8 border border-[#006874] shadow-lg max-w-4xl mx-auto">
+              <div className="border-b border-[#006874] pb-4 mb-6">
                 <h2 className="text-2xl font-black uppercase tracking-tighter">Aba de Verificação Técnica</h2>
                 <p className="text-xs font-bold uppercase opacity-40">Pré-visualização do Memorial de Cálculo</p>
               </div>
               
               <div className="grid grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Dados de Entrada</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">Dados de Entrada</h3>
                   <ul className="space-y-2 text-sm">
                     <li><span className="font-bold opacity-50">Categoria:</span> {state.category.toUpperCase()}</li>
                     <li><span className="font-bold opacity-50">Tipologia:</span> {TYPOLOGIES.find(t => t.id === state.typologyId)?.name}</li>
@@ -1014,7 +1030,7 @@ function ConfiguratorApp() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Modelo Estrutural</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">Modelo Estrutural</h3>
                   <ul className="space-y-2 text-sm">
                     <li><span className="font-bold opacity-50">Sistema:</span> {results.metrics.structuralSystem}</li>
                     <li><span className="font-bold opacity-50">Vão Efetivo:</span> {(results.metrics.effectiveSpan * 1000).toFixed(0)} mm</li>
@@ -1025,47 +1041,53 @@ function ConfiguratorApp() {
 
               {results.solutions.length > 0 && (
                 <div className="mt-8 space-y-8">
-                  <div className="bg-[#F9F9F7] p-6 border border-[#141414]">
-                    <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Diagnóstico Estrutural (Melhor Solução)</h3>
+                  <div className="bg-[#F9F9F7] p-6 border border-[#006874]">
+                    <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">Diagnóstico Estrutural ({selectedSolutionId === results.solutions[0].id ? "Melhor Solução" : "Solução Selecionada"})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div>
-                        <p className="font-black text-xl mb-1">{results.solutions[0].profile.code}</p>
-                        <p className="text-[10px] font-bold uppercase opacity-50 mb-4">{results.solutions[0].profile.series} • Vidro {results.solutions[0].glass.thickness}mm {results.solutions[0].glass.type}</p>
+                        <p className="font-black text-xl mb-1">{(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).profile.code}</p>
+                        <p className="text-[10px] font-bold uppercase opacity-50 mb-4">{(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).profile.series} • Vidro {(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).glass.thickness}mm {(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).glass.type}</p>
                         
                         <div className={`inline-block px-3 py-1 border text-[10px] font-black uppercase mb-4 ${
-                          results.solutions[0].elu.verification.classificacao === "REPROVADO" ? "bg-red-100 text-red-800 border-red-200" :
-                          results.solutions[0].elu.verification.classificacao === "CRITICO" ? "bg-orange-100 text-orange-800 border-orange-200" :
-                          results.solutions[0].elu.verification.classificacao === "APROVADO_LIMITE" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                          (results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).elu.verification.classificacao === "REPROVADO" ? "bg-red-100 text-red-800 border-red-200" :
+                          (results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).elu.verification.classificacao === "CRITICO" ? "bg-orange-100 text-orange-800 border-orange-200" :
+                          (results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).elu.verification.classificacao === "APROVADO_LIMITE" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
                           "bg-emerald-100 text-emerald-800 border-emerald-200"
                         }`}>
-                          {results.solutions[0].elu.verification.classificacao.replace("_", " ")}
+                          {(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).elu.verification.classificacao.replace("_", " ")}
                         </div>
                       </div>
                       <div className="text-[10px] font-bold uppercase opacity-70 leading-relaxed">
                         <p className="mb-2">Recomendação Técnica:</p>
-                        <p className="bg-white p-3 border border-[#141414]/10">{results.solutions[0].elu.verification.recomendacaoTecnica}</p>
+                        <p className="bg-white p-3 border border-[#006874]/10">{(results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]).elu.verification.recomendacaoTecnica}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-xs font-black uppercase tracking-widest border-b border-[#141414]/10 pb-2">Diagramas de Análise Estrutural</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest border-b border-[#006874]/10 pb-2">Diagramas de Análise Estrutural</h3>
                     <DetailedDiagrams
-                      solution={results.solutions[0]}
+                      solution={results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]}
                       metrics={results.metrics}
                     />
                   </div>
+                  
+                  <CalculationMemory 
+                    metrics={results.metrics}
+                    solution={results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]}
+                    state={getValidatedConfig(state)!}
+                  />
                 </div>
               )}
 
               {/* Viable Solutions List */}
               {results.solutions.length > 0 && (
                 <div className="mt-12">
-                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#141414]/10 pb-2">Lista de Soluções Viáveis</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">Lista de Soluções Viáveis (Clique para ver detalhes)</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-[10px]">
                       <thead>
-                        <tr className="border-b border-[#141414]">
+                        <tr className="border-b border-[#006874]">
                           <th className="p-2 font-black uppercase">Perfil</th>
                           <th className="p-2 font-black uppercase">Vidro</th>
                           <th className="p-2 font-black uppercase">Uso ELU</th>
@@ -1076,7 +1098,11 @@ function ConfiguratorApp() {
                       </thead>
                       <tbody>
                         {results.solutions.filter(s => s.isApproved).map(sol => (
-                          <tr key={sol.id} className="border-b border-[#141414]/10">
+                          <tr 
+                            key={sol.id} 
+                            className={`border-b border-[#006874]/10 cursor-pointer hover:bg-[#006874]/5 transition-colors ${selectedSolutionId === sol.id ? 'bg-[#006874]/10' : ''}`}
+                            onClick={() => setSelectedSolutionId(sol.id)}
+                          >
                             <td className="p-2 font-bold">{sol.profile.code}</td>
                             <td className="p-2">{sol.glass.thickness}mm {sol.glass.type}</td>
                             <td className="p-2">{sol.elu.usageIndex.toFixed(1)}%</td>
@@ -1113,7 +1139,7 @@ function ConfiguratorApp() {
           ) : (
             <div className="space-y-8">
               {/* Quick Parameters Edit */}
-              <div className="bg-white border border-[#141414] p-6">
+              <div className="bg-white border border-[#006874] p-6">
                 <h3 className="text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Maximize2 size={14} />
                   Ajuste Rápido de Parâmetros
@@ -1290,7 +1316,7 @@ function ConfiguratorApp() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-[#141414]">
+                        <tr className="border-b border-[#006874]">
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Fornecedor</th>
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Perfil Viável</th>
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Peso (kg/m)</th>
@@ -1300,7 +1326,7 @@ function ConfiguratorApp() {
                       </thead>
                       <tbody>
                         {comparisonResults.map((res, idx) => (
-                          <tr key={res.supplier.id} className={`border-b border-[#141414]/10 ${idx === 0 && res.bestSolution ? 'bg-[#086775]/10' : ''}`}>
+                          <tr key={res.supplier.id} className={`border-b border-[#006874]/10 ${idx === 0 && res.bestSolution ? 'bg-[#086775]/10' : ''}`}>
                             <td className="p-3 text-sm font-bold flex items-center gap-2">
                               {idx === 0 && res.bestSolution && <CheckCircle2 size={14} className="text-[#086775]" />}
                               {res.supplier.name}
@@ -1344,7 +1370,13 @@ function ConfiguratorApp() {
                             Perfil estrutural otimizado recomendado
                           </div>
                         )}
-                        <SolutionCard solution={sol} />
+                        <SolutionCard 
+                          solution={sol} 
+                          onViewDetails={() => {
+                            setSelectedSolutionId(sol.id);
+                            setShowReportPreview(true);
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -1353,7 +1385,7 @@ function ConfiguratorApp() {
 
               {/* Technical Detailing */}
               {!state.compareSuppliers && results.solutions.length > 0 && (
-                <div className="space-y-6 pt-8 border-t border-[#141414]/10">
+                <div className="space-y-6 pt-8 border-t border-[#006874]/10">
                   <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <FileText size={14} />
                     Análise Estrutural Detalhada
@@ -1369,7 +1401,7 @@ function ConfiguratorApp() {
         </section>
       </main>
 
-      <footer className="border-t border-[#141414] bg-white py-4 mt-8">
+      <footer className="border-t border-[#006874] bg-white py-4 mt-8">
         <div className="max-w-[1600px] mx-auto px-8 text-center text-[10px] font-bold uppercase opacity-40 tracking-widest">
           Developed by Eduardo Marques
         </div>

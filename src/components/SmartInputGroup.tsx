@@ -30,7 +30,7 @@ export const SmartInputGroup = ({
         <input
           type="number"
           className={`w-full bg-transparent border p-3 text-sm font-bold outline-none focus:bg-white transition-colors ${
-            isInvalid ? "border-red-500 bg-red-50" : "border-[#141414]"
+            isInvalid ? "border-red-500 bg-red-50" : "border-[#006874]"
           }`}
           value={value}
           onChange={(e) => {

@@ -14,7 +14,7 @@ export function SidebarTab({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-4 px-8 py-6 text-xs font-bold uppercase tracking-widest border-b border-[#141414] transition-all ${
+      className={`flex items-center gap-4 px-8 py-6 text-xs font-bold uppercase tracking-widest border-b border-[#006874] transition-all ${
         active ? "bg-[#086775] text-[#E4E3E0]" : "hover:bg-[#E4E3E0]"
       }`}
     >
@@ -47,7 +47,7 @@ export function InputGroup({
         <label className="text-[10px] font-bold uppercase opacity-50">
           {label}
         </label>
-        <span className="text-[9px] font-mono bg-[#141414] text-[#E4E3E0] px-1.5 py-0.5">
+        <span className="text-[9px] font-mono bg-[#006874] text-[#E4E3E0] px-1.5 py-0.5">
           {unit}
         </span>
       </div>
@@ -58,7 +58,7 @@ export function InputGroup({
         max={max}
         step={step}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="w-full bg-transparent border border-[#141414] p-3 text-sm font-bold focus:bg-white outline-none transition-all"
+        className="w-full bg-transparent border border-[#006874] p-3 text-sm font-bold focus:bg-white outline-none transition-all"
       />
     </div>
   );
