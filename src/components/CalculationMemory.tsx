@@ -4,10 +4,11 @@ import { CalculationMetrics, Solution, ValidatedConfig } from '../core/types';
 interface CalculationMemoryProps {
   metrics: CalculationMetrics;
   solution: Solution;
+  solutions: Solution[];
   state: ValidatedConfig;
 }
 
-export const CalculationMemory: React.FC<CalculationMemoryProps> = ({ metrics, solution, state }) => {
+export const CalculationMemory: React.FC<CalculationMemoryProps> = ({ metrics, solution, solutions, state }) => {
   return (
     <div className="mt-12 space-y-6">
       <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">
@@ -76,7 +77,16 @@ export const CalculationMemory: React.FC<CalculationMemoryProps> = ({ metrics, s
             <li><span className="font-bold">Tensão Admissível do Alumínio:</span> {state.allowableStress} MPa</li>
             <li><span className="font-bold">Índice de Uso (ELU):</span> {solution.elu.usageIndex.toFixed(1)}%</li>
             <li><span className="font-bold">Margem de Segurança:</span> {solution.elu.safetyMargin.toFixed(1)}%</li>
-            <li><span className="font-bold">Status ELU:</span> {solution.elu.passed ? "APROVADO" : "REPROVADO"}</li>
+            <li>
+              <span className="font-bold">Status ELU:</span>{" "}
+              <span className={`font-bold ${
+                solution.elu.verification.classificacao === "APROVADO_CONFORTO" ? "text-emerald-600" :
+                solution.elu.verification.classificacao === "APROVADO_LIMITE" ? "text-yellow-600" :
+                "text-red-600"
+              }`}>
+                {solution.elu.verification.classificacao.replace("_", " ")}
+              </span>
+            </li>
           </ul>
         </div>
 
@@ -91,9 +101,89 @@ export const CalculationMemory: React.FC<CalculationMemoryProps> = ({ metrics, s
             <li><span className="font-bold">Flecha Calculada:</span> {solution.els.deflection.toFixed(2)} mm</li>
             <li><span className="font-bold">Flecha Admissível (Limite):</span> {solution.els.deflectionLimit.toFixed(2)} mm</li>
             <li><span className="font-bold">Índice de Uso (ELS):</span> {solution.els.ratio.toFixed(1)}%</li>
-            <li><span className="font-bold">Status ELS:</span> {solution.els.passed ? "APROVADO" : "REPROVADO"}</li>
+            <li>
+              <span className="font-bold">Status ELS:</span>{" "}
+              <span className={`font-bold ${
+                solution.els.verification.classificacao === "APROVADO_CONFORTO" ? "text-emerald-600" :
+                solution.els.verification.classificacao === "APROVADO_LIMITE" ? "text-yellow-600" :
+                "text-red-600"
+              }`}>
+                {solution.els.verification.classificacao.replace("_", " ")}
+              </span>
+            </li>
           </ul>
         </div>
+
+        {/* Eficiência dos Itens Escolhidos */}
+        <div className="bg-[#F9F9F7] p-6 border border-[#006874] md:col-span-2">
+          <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">
+            Eficiência da Solução Escolhida
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p className="text-[10px] font-bold uppercase opacity-60 mb-1">Perfil de Alumínio</p>
+              <p className="text-sm font-black">{solution.profile.code}</p>
+              <p className="text-[10px] opacity-80 mt-1">Eficiência Estrutural: <span className="font-bold">{solution.globalEfficiency.toFixed(1)}%</span></p>
+              <p className="text-[10px] opacity-80">Peso Estimado: <span className="font-bold">{solution.profile.weight.toFixed(2)} kg/m</span></p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase opacity-60 mb-1">Especificação do Vidro</p>
+              <p className="text-sm font-black">{solution.glass.thickness}mm {solution.glass.type}</p>
+              <p className="text-[10px] opacity-80 mt-1">Tensão Admissível: <span className="font-bold">{solution.glass.admissibleStress} MPa</span></p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase opacity-60 mb-1">Status Global</p>
+              <p className={`text-sm font-black ${
+                solution.isApproved ? "text-emerald-600" : "text-red-600"
+              }`}>
+                {solution.isApproved ? "SOLUÇÃO APROVADA" : "SOLUÇÃO REPROVADA"}
+              </p>
+              <p className="text-[10px] opacity-80 mt-1">
+                {solution.isApproved 
+                  ? "Atende a todos os critérios normativos com segurança."
+                  : "Não atende aos critérios mínimos exigidos por norma."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Modelos Sugeridos (Top 3) */}
+        {solutions.length > 1 && (
+          <div className="bg-[#F9F9F7] p-6 border border-[#006874] md:col-span-2">
+            <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">
+              Modelos Sugeridos (Alternativas Viáveis)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {solutions
+                .filter(s => s.isApproved && s.id !== solution.id)
+                .slice(0, 3)
+                .map((alt, idx) => (
+                  <div key={alt.id} className="border border-[#006874]/20 p-4 bg-white">
+                    <p className="text-[10px] font-bold uppercase opacity-60 mb-2">Opção {idx + 1}</p>
+                    <p className="text-xs font-black">{alt.profile.code}</p>
+                    <p className="text-[10px] opacity-80 mb-2">{alt.glass.thickness}mm {alt.glass.type}</p>
+                    <div className="space-y-1 text-[9px]">
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Uso ELU:</span>
+                        <span className="font-bold">{alt.elu.usageIndex.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Flecha:</span>
+                        <span className="font-bold">{alt.els.deflection.toFixed(2)} mm</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Eficiência:</span>
+                        <span className="font-bold">{alt.globalEfficiency.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              {solutions.filter(s => s.isApproved && s.id !== solution.id).length === 0 && (
+                <p className="text-[10px] opacity-60 italic col-span-3">Nenhuma outra alternativa viável encontrada para os parâmetros atuais.</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

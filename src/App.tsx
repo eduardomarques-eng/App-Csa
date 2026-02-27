@@ -433,7 +433,7 @@ function ConfiguratorApp() {
               ? filteredProfiles.filter(p => p.code === state.profileId)
               : filteredProfiles;
               
-            const glassesToTest = state.glassId
+            const glassesToTest = state.glassId && !state.autoOptimize
               ? filteredGlasses.filter(g => g.id === state.glassId)
               : filteredGlasses;
 
@@ -553,7 +553,7 @@ function ConfiguratorApp() {
               <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-[#006874] pb-2">
                 <LayoutGrid size={16} /> 1. Identificação
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {["janela", "porta", "guarda-corpo", "pele-de-vidro"].map(
                   (cat) => (
                     <CategoryButton
@@ -598,6 +598,12 @@ function ConfiguratorApp() {
                 </h3>
                 <div className="flex gap-2">
                   <button
+                    onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
+                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.compareSuppliers ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
+                  >
+                    Comparar Sistemistas
+                  </button>
+                  <button
                     onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
                     className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.autoOptimize ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
                   >
@@ -615,7 +621,7 @@ function ConfiguratorApp() {
                 />
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#006874]/10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#006874]/10">
                 <SmartInputGroup
                   label="Altura Total"
                   unit="mm"
@@ -670,7 +676,7 @@ function ConfiguratorApp() {
                   />
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <SmartSelectGroup
                     label="Tipo de Vidro"
                     value={state.glassType}
@@ -682,12 +688,14 @@ function ConfiguratorApp() {
                     ]}
                   />
                   
-                  <SmartSelectGroup
-                    label="Espessura do Vidro"
-                    value={state.glassId}
-                    onChange={(v) => dispatch({ type: "SET_GLASS", payload: v })}
-                    options={filteredGlasses.map(g => ({ value: g.id, label: `${g.thickness}mm` }))}
-                  />
+                  {!state.autoOptimize && !state.compareSuppliers && (
+                    <SmartSelectGroup
+                      label="Espessura do Vidro"
+                      value={state.glassId}
+                      onChange={(v) => dispatch({ type: "SET_GLASS", payload: v })}
+                      options={filteredGlasses.map(g => ({ value: g.id, label: `${g.thickness}mm` }))}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -742,7 +750,7 @@ function ConfiguratorApp() {
                       });
                     }}
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <SmartInputGroup
                       label="Velocidade (V0)"
                       unit="m/s"
@@ -868,7 +876,7 @@ function ConfiguratorApp() {
                   {state.intermediateSupports === 1 && (
                     <div className="p-4 border border-[#006874] bg-[#F9F9F7] space-y-4">
                       <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#006874]/10 pb-2">Apoio Intermediário 1</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <SmartSelectGroup
                           label="Tipo de Vínculo"
                           value={state.intermediateSupport1Type}
@@ -902,7 +910,7 @@ function ConfiguratorApp() {
                   {state.intermediateSupports === 2 && (
                     <div className="p-4 border border-[#006874] bg-[#F9F9F7] space-y-4">
                       <h4 className="text-[10px] font-black uppercase tracking-widest border-b border-[#006874]/10 pb-2">Apoios Intermediários</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <SmartSelectGroup
                           label="Vínculo Apoio 1"
                           value={state.intermediateSupport1Type}
@@ -930,7 +938,7 @@ function ConfiguratorApp() {
                           }}
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <SmartSelectGroup
                           label="Vínculo Apoio 2"
                           value={state.intermediateSupport2Type}
@@ -965,7 +973,7 @@ function ConfiguratorApp() {
               )}
               
               {state.category !== "pele-de-vidro" && state.category !== "guarda-corpo" && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <SmartSelectGroup
                     label="Apoio Base"
                     value={state.supportBottom}
@@ -1001,7 +1009,7 @@ function ConfiguratorApp() {
                 <p className="text-xs font-bold uppercase opacity-40">Pré-visualização do Memorial de Cálculo</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-widest mb-4 border-b border-[#006874]/10 pb-2">Dados de Entrada</h3>
                   <ul className="space-y-2 text-sm">
@@ -1059,6 +1067,7 @@ function ConfiguratorApp() {
                   <CalculationMemory 
                     metrics={results.metrics}
                     solution={results.solutions.find(s => s.id === selectedSolutionId) || results.solutions[0]}
+                    solutions={results.solutions}
                     state={getValidatedConfig(state)!}
                   />
                 </div>

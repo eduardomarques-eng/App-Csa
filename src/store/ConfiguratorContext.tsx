@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { ConfigState, ItemCategory, SupportCondition, SystemType } from "../core/types";
-import { SUPPLIERS, BRAZIL_REGIONS } from "../core/constants";
+import { SUPPLIERS, GLASS_SUPPLIERS, BRAZIL_REGIONS } from "../core/constants";
 
 type Action =
   | { type: "SET_STEP"; payload: number }
@@ -59,7 +59,7 @@ const initialState: ConfigState = {
   typologyId: "",
   systemSupplierId: SUPPLIERS[0].id,
   aluminumSupplierId: SUPPLIERS[0].id,
-  glassSupplierId: SUPPLIERS[0].id,
+  glassSupplierId: GLASS_SUPPLIERS[0].id,
   profileId: "",
   glassId: "",
   height: "",
@@ -116,9 +116,9 @@ const reducer = (state: ConfigState, action: Action): ConfigState => {
     case "SET_MATERIALS":
       return { ...state, ...action.payload };
     case "TOGGLE_AUTO_OPTIMIZE":
-      return { ...state, autoOptimize: !state.autoOptimize, profileId: !state.autoOptimize ? "" : state.profileId };
+      return { ...state, autoOptimize: !state.autoOptimize, profileId: !state.autoOptimize ? "" : state.profileId, glassId: !state.autoOptimize ? "" : state.glassId };
     case "TOGGLE_COMPARE_SUPPLIERS":
-      return { ...state, compareSuppliers: !state.compareSuppliers };
+      return { ...state, compareSuppliers: !state.compareSuppliers, profileId: !state.compareSuppliers ? "" : state.profileId, glassId: !state.compareSuppliers ? "" : state.glassId };
     case "RESET":
       return initialState;
     default:

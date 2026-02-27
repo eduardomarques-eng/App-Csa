@@ -275,6 +275,43 @@ export const generatePDF = (state: ConfigState, data: any) => {
     addLine(
       `Tensão Admissível = ${sol.glassResult.admissibleStress.toFixed(2)} MPa`,
     );
+
+    // 7. Modelos Sugeridos (Alternativas Viáveis)
+    if (data.solutions && data.solutions.length > 1) {
+      doc.addPage();
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 104, 116);
+      doc.text("7. MODELOS SUGERIDOS (ALTERNATIVAS VIÁVEIS)", 20, 20);
+      
+      const altData = data.solutions
+        .filter(s => s.isApproved && s.id !== sol.id)
+        .slice(0, 5)
+        .map((alt, idx) => [
+          `Opção ${idx + 1}`,
+          alt.profile.code,
+          `${alt.glass.thickness}mm ${alt.glass.type}`,
+          `${alt.elu.usageIndex.toFixed(1)}%`,
+          `${alt.els.deflection.toFixed(2)} mm`,
+          `${alt.globalEfficiency.toFixed(1)}%`
+        ]);
+
+      if (altData.length > 0) {
+        autoTable(doc, {
+          startY: 30,
+          head: [["#", "Perfil", "Vidro", "Uso ELU", "Flecha", "Eficiência"]],
+          body: altData,
+          theme: "striped",
+          headStyles: { fillColor: [0, 104, 116] },
+          styles: { fontSize: 9 },
+        });
+      } else {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100, 100, 100);
+        doc.text("Nenhuma outra alternativa viável encontrada para os parâmetros atuais.", 20, 30);
+      }
+    }
   }
 
   // Rodapé
