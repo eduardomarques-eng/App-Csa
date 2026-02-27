@@ -33,7 +33,7 @@ import {
 import { getRegionWindSpeed } from "./services/normativeService";
 import { generatePDF } from "./logic/pdfGenerator";
 import { isFormularioValido, getValidatedConfig } from "./logic/validation";
-import { BRAZIL_REGIONS, SUPPLIERS, TYPOLOGIES } from "./core/constants";
+import { BRAZIL_REGIONS, SUPPLIERS, GLASS_SUPPLIERS, TYPOLOGIES } from "./core/constants";
 import {
   Solution,
   CalculationMetrics,
@@ -388,8 +388,8 @@ function ConfiguratorApp() {
     [state.category],
   );
   const filteredProfiles = useMemo(
-    () => getCompatibleProfiles(state.aluminumSupplierId, state.category),
-    [state.aluminumSupplierId, state.category],
+    () => getCompatibleProfiles(state.systemSupplierId, state.category),
+    [state.systemSupplierId, state.category],
   );
   const filteredGlasses = useMemo(
     () => getCompatibleGlasses(state.glassSupplierId, state.glassType),
@@ -507,8 +507,8 @@ function ConfiguratorApp() {
               <Calculator className="text-white" size={20} />
             </div>
             <div>
-              <h1 className="text-sm font-black uppercase tracking-tighter leading-none">
-                EsquadriasCalc Pro
+              <h1 className="text-sm font-black tracking-tighter leading-none">
+                CSA CalcPro
               </h1>
               <p className="text-[10px] font-bold uppercase opacity-40 tracking-widest">
                 Dimensionamento Estrutural
@@ -598,12 +598,6 @@ function ConfiguratorApp() {
                 </h3>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
-                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.compareSuppliers ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
-                  >
-                    Comparar Fornecedores
-                  </button>
-                  <button
                     onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
                     className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.autoOptimize ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
                   >
@@ -614,7 +608,7 @@ function ConfiguratorApp() {
 
               {state.typologyId && !state.compareSuppliers && (
                 <SmartSelectGroup
-                  label="Fornecedor do Sistema"
+                  label="Sistemista"
                   value={state.systemSupplierId}
                   onChange={(v) => dispatch({ type: "SET_SYSTEM_SUPPLIER", payload: v })}
                   options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
@@ -654,16 +648,6 @@ function ConfiguratorApp() {
               )}
 
               <div className="space-y-4 pt-4 border-t border-[#006874]/10">
-                {!state.compareSuppliers && (
-                  <SmartSelectGroup
-                    label="Fornecedor do Alumínio"
-                    value={state.aluminumSupplierId}
-                    onChange={(v) => dispatch({ type: "SET_ALUMINUM_SUPPLIER", payload: v })}
-                    options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
-                    required={false}
-                  />
-                )}
-
                 {!state.autoOptimize && !state.compareSuppliers && (
                   <SmartSelectGroup
                     label="Perfil de Alumínio"
@@ -681,7 +665,7 @@ function ConfiguratorApp() {
                     label="Fornecedor do Vidro"
                     value={state.glassSupplierId}
                     onChange={(v) => dispatch({ type: "SET_GLASS_SUPPLIER", payload: v })}
-                    options={SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
+                    options={GLASS_SUPPLIERS.map(s => ({ value: s.id, label: s.name }))}
                     required={false}
                   />
                 )}
@@ -690,7 +674,7 @@ function ConfiguratorApp() {
                   <SmartSelectGroup
                     label="Tipo de Vidro"
                     value={state.glassType}
-                    onChange={(v) => dispatch({ type: "SET_MATERIALS", payload: { ...state, glassType: v as any } })}
+                    onChange={(v) => dispatch({ type: "SET_MATERIALS", payload: { ...state, glassType: v as any, glassId: "" } })}
                     options={[
                       { value: "monolithic", label: "Monolítico" },
                       { value: "tempered", label: "Temperado" },
@@ -1310,14 +1294,14 @@ function ConfiguratorApp() {
                   <div className="flex justify-between items-end">
                     <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                       <Layers size={14} />
-                      Comparativo entre Fornecedores
+                      Comparativo entre Sistemistas
                     </h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#006874]">
-                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Fornecedor</th>
+                          <th className="p-3 text-[10px] font-black uppercase tracking-widest">Sistemista</th>
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Perfil Viável</th>
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Peso (kg/m)</th>
                           <th className="p-3 text-[10px] font-black uppercase tracking-widest">Eficiência (%)</th>

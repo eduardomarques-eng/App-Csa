@@ -16,7 +16,5 @@ export const getCompatibleProfiles = (
 };
 
 export const getCompatibleGlasses = (glassSupplierId: string, type: string): GlassOption[] => {
-  // For now, glassSupplierId is not used in filtering since we don't have supplier-specific glass catalogs,
-  // but we keep it in the signature for future expansion.
-  return GLASS_CATALOG.filter((g) => g.type === type);
+  return GLASS_CATALOG.filter((g) => g.type === type && (!g.supplierId || g.supplierId === glassSupplierId));
 };

@@ -96,11 +96,11 @@ const reducer = (state: ConfigState, action: Action): ConfigState => {
     case "SET_STEP":
       return { ...state, step: action.payload };
     case "SET_CATEGORY":
-      return { ...state, category: action.payload, typologyId: "", profileId: "", glassId: "", step: 2 };
+      return { ...state, category: action.payload, typologyId: "", profileId: "", step: 2 };
     case "SET_TYPOLOGY":
       return { ...state, typologyId: action.payload, step: 3 };
     case "SET_SYSTEM_SUPPLIER":
-      return { ...state, systemSupplierId: action.payload, profileId: "", glassId: "", step: 4 };
+      return { ...state, systemSupplierId: action.payload, profileId: "", step: 4 };
     case "SET_ALUMINUM_SUPPLIER":
       return { ...state, aluminumSupplierId: action.payload, profileId: "" };
     case "SET_GLASS_SUPPLIER":

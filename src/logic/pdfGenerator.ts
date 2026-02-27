@@ -16,7 +16,7 @@ export const generatePDF = (state: ConfigState, data: any) => {
   doc.setFontSize(22);
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("ESQUADRIASCALC PRO", 20, 20);
+  doc.text("CSA CalcPro", 20, 20);
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -290,7 +290,7 @@ export const generatePDF = (state: ConfigState, data: any) => {
       { align: "center" },
     );
     doc.text(
-      "EsquadriasCalc Pro - Tecnologia para Engenharia de Esquadrias",
+      "CSA CalcPro - Tecnologia para Engenharia de Esquadrias",
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 15,
       { align: "center" },

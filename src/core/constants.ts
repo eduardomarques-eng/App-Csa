@@ -1,11 +1,11 @@
 import { Supplier, RegionWind, Typology, Profile, GlassOption } from "./types";
 
 export const BRAZIL_REGIONS: RegionWind[] = [
-  { name: "Região I (Sul/Sudeste)", v0: 45 },
-  { name: "Região II (Centro-Oeste)", v0: 40 },
-  { name: "Região III (Nordeste)", v0: 35 },
-  { name: "Região IV (Norte)", v0: 30 },
-  { name: "Região V (Extremo Sul)", v0: 50 },
+  { name: "Região I", v0: 30 },
+  { name: "Região II", v0: 35 },
+  { name: "Região III", v0: 40 },
+  { name: "Região IV", v0: 45 },
+  { name: "Região V", v0: 50 },
 ];
 
 export const SUPPLIERS: Supplier[] = [
@@ -14,6 +14,13 @@ export const SUPPLIERS: Supplier[] = [
   { id: "sup-03", name: "Alumasa" },
   { id: "sup-04", name: "Perfileve" },
   { id: "sup-05", name: "Perfil Alumínio" },
+];
+
+export const GLASS_SUPPLIERS: Supplier[] = [
+  { id: "gsup-01", name: "Cebrace" },
+  { id: "gsup-02", name: "Vivix" },
+  { id: "gsup-03", name: "Guardian" },
+  { id: "gsup-04", name: "AGC" },
 ];
 
 export const TYPOLOGIES: Typology[] = [
@@ -235,18 +242,62 @@ export const CATALOG: Profile[] = [
 ];
 
 export const GLASS_CATALOG: GlassOption[] = [
-  { id: "g-4-m", thickness: 4, type: "monolithic", admissibleStress: 15 },
-  { id: "g-6-m", thickness: 6, type: "monolithic", admissibleStress: 15 },
-  { id: "g-8-m", thickness: 8, type: "monolithic", admissibleStress: 15 },
-  { id: "g-10-m", thickness: 10, type: "monolithic", admissibleStress: 15 },
-  { id: "g-6-t", thickness: 6, type: "tempered", admissibleStress: 40 },
-  { id: "g-8-t", thickness: 8, type: "tempered", admissibleStress: 40 },
-  { id: "g-10-t", thickness: 10, type: "tempered", admissibleStress: 40 },
-  { id: "g-12-t", thickness: 12, type: "tempered", admissibleStress: 40 },
-  { id: "g-6-l", thickness: 6, type: "laminated", admissibleStress: 15 },
-  { id: "g-8-l", thickness: 8, type: "laminated", admissibleStress: 15 },
-  { id: "g-10-l", thickness: 10, type: "laminated", admissibleStress: 15 },
-  { id: "g-12-l", thickness: 12, type: "laminated", admissibleStress: 15 },
-  { id: "g-16-l", thickness: 16, type: "laminated", admissibleStress: 15 },
-  { id: "g-20-l", thickness: 20, type: "laminated", admissibleStress: 15 },
+  // Cebrace (gsup-01)
+  { id: "ceb-4-m", thickness: 4, type: "monolithic", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-6-m", thickness: 6, type: "monolithic", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-8-m", thickness: 8, type: "monolithic", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-10-m", thickness: 10, type: "monolithic", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-6-t", thickness: 6, type: "tempered", admissibleStress: 40, supplierId: "gsup-01" },
+  { id: "ceb-8-t", thickness: 8, type: "tempered", admissibleStress: 40, supplierId: "gsup-01" },
+  { id: "ceb-10-t", thickness: 10, type: "tempered", admissibleStress: 40, supplierId: "gsup-01" },
+  { id: "ceb-12-t", thickness: 12, type: "tempered", admissibleStress: 40, supplierId: "gsup-01" },
+  { id: "ceb-6-l", thickness: 6, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-8-l", thickness: 8, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-10-l", thickness: 10, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-12-l", thickness: 12, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-16-l", thickness: 16, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+  { id: "ceb-20-l", thickness: 20, type: "laminated", admissibleStress: 15, supplierId: "gsup-01" },
+
+  // Vivix (gsup-02)
+  { id: "viv-4-m", thickness: 4, type: "monolithic", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-6-m", thickness: 6, type: "monolithic", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-8-m", thickness: 8, type: "monolithic", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-10-m", thickness: 10, type: "monolithic", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-6-t", thickness: 6, type: "tempered", admissibleStress: 40, supplierId: "gsup-02" },
+  { id: "viv-8-t", thickness: 8, type: "tempered", admissibleStress: 40, supplierId: "gsup-02" },
+  { id: "viv-10-t", thickness: 10, type: "tempered", admissibleStress: 40, supplierId: "gsup-02" },
+  { id: "viv-12-t", thickness: 12, type: "tempered", admissibleStress: 40, supplierId: "gsup-02" },
+  { id: "viv-6-l", thickness: 6, type: "laminated", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-8-l", thickness: 8, type: "laminated", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-10-l", thickness: 10, type: "laminated", admissibleStress: 15, supplierId: "gsup-02" },
+  { id: "viv-12-l", thickness: 12, type: "laminated", admissibleStress: 15, supplierId: "gsup-02" },
+
+  // Guardian (gsup-03)
+  { id: "gua-4-m", thickness: 4, type: "monolithic", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-6-m", thickness: 6, type: "monolithic", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-8-m", thickness: 8, type: "monolithic", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-10-m", thickness: 10, type: "monolithic", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-6-t", thickness: 6, type: "tempered", admissibleStress: 40, supplierId: "gsup-03" },
+  { id: "gua-8-t", thickness: 8, type: "tempered", admissibleStress: 40, supplierId: "gsup-03" },
+  { id: "gua-10-t", thickness: 10, type: "tempered", admissibleStress: 40, supplierId: "gsup-03" },
+  { id: "gua-12-t", thickness: 12, type: "tempered", admissibleStress: 40, supplierId: "gsup-03" },
+  { id: "gua-6-l", thickness: 6, type: "laminated", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-8-l", thickness: 8, type: "laminated", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-10-l", thickness: 10, type: "laminated", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-12-l", thickness: 12, type: "laminated", admissibleStress: 15, supplierId: "gsup-03" },
+  { id: "gua-16-l", thickness: 16, type: "laminated", admissibleStress: 15, supplierId: "gsup-03" },
+
+  // AGC (gsup-04)
+  { id: "agc-4-m", thickness: 4, type: "monolithic", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-6-m", thickness: 6, type: "monolithic", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-8-m", thickness: 8, type: "monolithic", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-10-m", thickness: 10, type: "monolithic", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-6-t", thickness: 6, type: "tempered", admissibleStress: 40, supplierId: "gsup-04" },
+  { id: "agc-8-t", thickness: 8, type: "tempered", admissibleStress: 40, supplierId: "gsup-04" },
+  { id: "agc-10-t", thickness: 10, type: "tempered", admissibleStress: 40, supplierId: "gsup-04" },
+  { id: "agc-12-t", thickness: 12, type: "tempered", admissibleStress: 40, supplierId: "gsup-04" },
+  { id: "agc-6-l", thickness: 6, type: "laminated", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-8-l", thickness: 8, type: "laminated", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-10-l", thickness: 10, type: "laminated", admissibleStress: 15, supplierId: "gsup-04" },
+  { id: "agc-12-l", thickness: 12, type: "laminated", admissibleStress: 15, supplierId: "gsup-04" },
 ];

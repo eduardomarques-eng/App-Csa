@@ -30,6 +30,7 @@ export interface GlassOption {
   thickness: number;
   type: GlassType;
   admissibleStress: number; // MPa
+  supplierId?: string;
 }
 
 export interface Supplier {

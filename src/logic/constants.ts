@@ -1,11 +1,11 @@
 import { Profile, Supplier, Typology, RegionWind } from "./types";
 
 export const BRAZIL_REGIONS: RegionWind[] = [
-  { name: "Região I (Sul / RS / SC)", v0: 45 },
-  { name: "Região II (Sudeste / SP / RJ / PR)", v0: 40 },
-  { name: "Região III (Centro / MG / GO / MS)", v0: 35 },
-  { name: "Região IV (Norte / Nordeste / BA / PE)", v0: 30 },
-  { name: "Região V (Extremo Norte / AM / RR)", v0: 25 },
+  { name: "Região I", v0: 30 },
+  { name: "Região II", v0: 35 },
+  { name: "Região III", v0: 40 },
+  { name: "Região IV", v0: 45 },
+  { name: "Região V", v0: 50 },
 ];
 
 export const SUPPLIERS: Supplier[] = [
