@@ -596,20 +596,6 @@ function ConfiguratorApp() {
                 <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                   <Settings size={16} /> 2. Especificação Técnica
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
-                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.compareSuppliers ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
-                  >
-                    Comparar Sistemistas
-                  </button>
-                  <button
-                    onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
-                    className={`text-[9px] font-bold uppercase px-2 py-1 border border-[#006874] transition-colors ${state.autoOptimize ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
-                  >
-                    Otimização Automática
-                  </button>
-                </div>
               </div>
 
               {state.typologyId && !state.compareSuppliers && (
@@ -996,6 +982,24 @@ function ConfiguratorApp() {
                   />
                 </div>
               )}
+            </div>
+
+            {/* Otimização e Comparação */}
+            <div className="pt-6 mt-6 border-t border-[#006874]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  onClick={() => dispatch({ type: "TOGGLE_COMPARE_SUPPLIERS" })}
+                  className={`text-[10px] font-bold uppercase px-4 py-3 border border-[#006874] transition-colors w-full ${state.compareSuppliers ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
+                >
+                  Comparar Sistemistas
+                </button>
+                <button
+                  onClick={() => dispatch({ type: "TOGGLE_AUTO_OPTIMIZE" })}
+                  className={`text-[10px] font-bold uppercase px-4 py-3 border border-[#006874] transition-colors w-full ${state.autoOptimize ? "bg-[#006874] text-white" : "hover:bg-[#E4E3E0]"}`}
+                >
+                  Otimização Automática
+                </button>
+              </div>
             </div>
           </div>
         </aside>
