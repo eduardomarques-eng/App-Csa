@@ -37,13 +37,11 @@ export const CalculationMemory: React.FC<CalculationMemoryProps> = ({ metrics, s
               <br />
               <span className="opacity-70">Projeto, execução e aplicações de vidros, cálculo de espessura e tensão admissível.</span>
             </li>
-            {state.category === "guarda-corpo" && (
-              <li>
-                <span className="font-bold">ABNT NBR 14718:2019</span> - Guarda-corpos para edificação.
-                <br />
-                <span className="opacity-70">Requisitos, cargas horizontais e verticais de projeto.</span>
-              </li>
-            )}
+            <li>
+              <span className="font-bold">ABNT NBR 14718:2019</span> - Guarda-corpos para edificação.
+              <br />
+              <span className="opacity-70">Requisitos, cargas horizontais e verticais de projeto.</span>
+            </li>
           </ul>
         </div>
 

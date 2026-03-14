@@ -795,6 +795,75 @@ function ConfiguratorApp() {
                       )}
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 gap-4 pt-4 border-t border-[#006874]/10">
+                    <SmartSelectGroup
+                      label="Fator Topográfico (S1)"
+                      value={state.s1.toString()}
+                      onChange={(v) =>
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, s1: parseFloat(v) },
+                        })
+                      }
+                      options={[
+                        { value: "1.0", label: "1.0 - Terreno plano ou fracamente acidentado" },
+                        { value: "1.1", label: "1.1 - Taludes e morros (estimativa)" },
+                        { value: "1.2", label: "1.2 - Topo de morros e cumeadas (estimativa)" },
+                      ]}
+                    />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <SmartSelectGroup
+                        label="Fator de Terreno (S2 - Categoria)"
+                        value={state.s2Category.toString()}
+                        onChange={(v) =>
+                          dispatch({
+                            type: "SET_WIND",
+                            payload: { ...state, s2Category: parseInt(v) },
+                          })
+                        }
+                        options={[
+                          { value: "1", label: "Cat. I - Superfícies lisas (mar, lagos)" },
+                          { value: "2", label: "Cat. II - Terrenos abertos em nível" },
+                          { value: "3", label: "Cat. III - Terrenos planos com obstáculos" },
+                          { value: "4", label: "Cat. IV - Obstáculos numerosos (cidades)" },
+                          { value: "5", label: "Cat. V - Centros de grandes cidades" },
+                        ]}
+                      />
+                      <SmartSelectGroup
+                        label="Dimensões (S2 - Classe)"
+                        value={state.s2Class}
+                        onChange={(v) =>
+                          dispatch({
+                            type: "SET_WIND",
+                            payload: { ...state, s2Class: v as "A" | "B" | "C" },
+                          })
+                        }
+                        options={[
+                          { value: "A", label: "Classe A - Maior dimensão ≤ 20m" },
+                          { value: "B", label: "Classe B - Maior dimensão entre 20m e 50m" },
+                          { value: "C", label: "Classe C - Maior dimensão > 50m" },
+                        ]}
+                      />
+                    </div>
+
+                    <SmartSelectGroup
+                      label="Fator Estatístico (S3)"
+                      value={state.s3.toString()}
+                      onChange={(v) =>
+                        dispatch({
+                          type: "SET_WIND",
+                          payload: { ...state, s3: parseFloat(v) },
+                        })
+                      }
+                      options={[
+                        { value: "1.1", label: "1.10 - Edificações essenciais (hospitais, bombeiros)" },
+                        { value: "1.0", label: "1.00 - Edificações normais (residenciais, comerciais)" },
+                        { value: "0.95", label: "0.95 - Edificações temporárias" },
+                        { value: "0.83", label: "0.83 - Edificações rurais" },
+                      ]}
+                    />
+                  </div>
                 </>
               )}
             </div>

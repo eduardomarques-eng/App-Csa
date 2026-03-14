@@ -42,10 +42,8 @@ export const generatePDF = (state: ConfigState, data: any) => {
     ["ABNT NBR 6123:1988", "Forças devidas ao vento em edificações"],
     ["ABNT NBR 10821:2017", "Esquadrias para edificações - Desempenho estrutural"],
     ["ABNT NBR 7199:2016", "Vidros na construção civil - Projeto, execução e aplicações"],
+    ["ABNT NBR 14718:2019", "Guarda-corpos para edificação"],
   ];
-  if (state.category === "guarda-corpo") {
-    normasData.push(["ABNT NBR 14718:2019", "Guarda-corpos para edificação"]);
-  }
 
   autoTable(doc, {
     startY: 60,

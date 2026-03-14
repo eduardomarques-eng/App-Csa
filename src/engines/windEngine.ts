@@ -70,19 +70,35 @@ export const calculateWindPressure = (
     windPressure = windTunnelPressure / 1000; // Convert Pa to kN/m²
     q = windPressure / Math.abs(cp); // Back-calculate q for display purposes if needed, though not strictly accurate
   } else {
-    // S2 Factor (Simplified NBR 6123 interpolation)
-    let s2Base = 1.0;
-    if (s2Category === 1) s2Base = 1.1;
-    else if (s2Category === 2) s2Base = 1.0;
-    else if (s2Category === 3) s2Base = 0.9;
-    else if (s2Category === 4) s2Base = 0.8;
-    else if (s2Category === 5) s2Base = 0.7;
+    // S2 Factor (NBR 6123 interpolation based on building height)
+    const z = Math.max(buildingHeight, 5); // Minimum height is usually 5m for calculation
+    
+    const s2Params: Record<string, Record<number, { b: number, p: number, Fr: number }>> = {
+      "A": {
+        1: { b: 1.10, p: 0.06, Fr: 1.00 },
+        2: { b: 1.00, p: 0.085, Fr: 1.00 },
+        3: { b: 0.94, p: 0.10, Fr: 1.00 },
+        4: { b: 0.86, p: 0.12, Fr: 1.00 },
+        5: { b: 0.74, p: 0.15, Fr: 1.00 }
+      },
+      "B": {
+        1: { b: 1.11, p: 0.065, Fr: 0.98 },
+        2: { b: 1.00, p: 0.09, Fr: 0.98 },
+        3: { b: 0.94, p: 0.105, Fr: 0.98 },
+        4: { b: 0.86, p: 0.125, Fr: 0.98 },
+        5: { b: 0.74, p: 0.16, Fr: 0.98 }
+      },
+      "C": {
+        1: { b: 1.12, p: 0.07, Fr: 0.95 },
+        2: { b: 1.00, p: 0.095, Fr: 0.95 },
+        3: { b: 0.94, p: 0.115, Fr: 0.95 },
+        4: { b: 0.86, p: 0.135, Fr: 0.95 },
+        5: { b: 0.74, p: 0.175, Fr: 0.95 }
+      }
+    };
 
-    let s2ClassMod = 0;
-    if (s2Class === "A") s2ClassMod = 0.05;
-    else if (s2Class === "C") s2ClassMod = -0.05;
-
-    const s2 = s2Base + s2ClassMod;
+    const params = s2Params[s2Class][s2Category];
+    const s2 = params.b * params.Fr * Math.pow(z / 10, params.p);
 
     // Characteristic Wind Speed (Vk)
     vk = windSpeed * s1 * s2 * s3;
