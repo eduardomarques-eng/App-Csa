@@ -511,7 +511,7 @@ function ConfiguratorApp() {
                 CSA CalcPro
               </h1>
               <p className="text-[10px] font-bold uppercase opacity-40 tracking-widest">
-                Dimensionamento Estrutural
+                Dimensionamento Estrutural de Esquadrias e Vidro
               </p>
             </div>
           </div>
