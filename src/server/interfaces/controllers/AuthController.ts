@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { AuthService } from "../../infrastructure/auth/AuthService";
-import db from "../../infrastructure/database/sqlite";
+import { AuthService } from "../../infrastructure/auth/AuthService.ts";
+import db from "../../infrastructure/database/sqlite.ts";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),

@@ -6,8 +6,8 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import dotenv from "dotenv";
 
-import authRoutes from "./src/server/interfaces/routes/authRoutes";
-import { errorHandler } from "./src/server/interfaces/middlewares/errorHandler";
+import authRoutes from "./src/server/interfaces/routes/authRoutes.ts";
+import { errorHandler } from "./src/server/interfaces/middlewares/errorHandler.ts";
 
 dotenv.config();
 
